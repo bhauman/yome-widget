@@ -20,20 +20,18 @@
 
 (defn change-yome-sides [yome v]
   (assoc yome
-         :num-sides v
          :sides (mapv (fn [i]
                        (if-let [s (get-in yome [:sides i])]
                          s
                          {:corner nil
                           :face nil})) (range v))))
 
-
 (defonce app-state (atom (change-yome-sides {} 8)))
 
 (def code-map {nil "r"
-               :door-frame "d"
-               :stove-vent "p"
-               :zip-door   "z"})
+              :door-frame "d"
+              :stove-vent "p"
+              :zip-door   "z"})
 
 (def decode-map (map-invert code-map))
 
@@ -51,8 +49,7 @@
         sides (mapv (fn [s c]
                      (assoc s :corner (decode-map c)))
                    sides corners)]
-    {:num-sides (count sides)
-     :sides sides}))
+    {:sides sides}))
 
 (def round js/Math.round)
 
@@ -60,10 +57,10 @@
   (count (:sides yome)))
 
 (defn yome-theta [yome]
-  (/ (* 2 js/Math.PI) (:num-sides yome)))
+  (/ (* 2 js/Math.PI) (side-count yome)))
 
 (defn yome-deg [yome]
-  (/ 360 (:num-sides yome)))
+  (/ 360 (side-count yome)))
 
 (defn rotate [theta {:keys [x y] :as point} ]
   (let [sint (js/Math.sin theta)
@@ -97,7 +94,7 @@
                     :y2 (:y end)}]))
 
 (defmethod draw :side [_ yome]
-  (sab/html (draw :line (yome-side-line 180 (:num-sides yome)))))
+  (sab/html (draw :line (yome-side-line 180 (side-count yome)))))
 
 (defmethod draw :window [_ yome]
   (let [theta (yome-theta yome)
@@ -143,7 +140,7 @@
                :key "yome-stove-vent"}]))
 
 (defn yome-side [yome index]
-  (let [num-sides (:num-sides yome)
+  (let [num-sides (side-count yome)
         {:keys [corner face]} (get-in yome [:sides index])]
     (sab/html [:g {:transform (str "rotate("
                                    (round (* (yome-deg yome) index))
@@ -158,7 +155,7 @@
 (defn draw-yome [yome]
   (sab/html
    [:g {:transform (str "rotate(" (round (/ (yome-deg yome) 2)) ", 0, 0)")}
-    (map (partial yome-side yome) (range (:num-sides yome)))]))
+    (map (partial yome-side yome) (range (side-count yome)))]))
 
 (def base-corner-controls [:stove-vent :zip-door :door-frame])
 
@@ -244,14 +241,15 @@
                (face-controls yome side index)])))
 
 (defn draw-yome-controls [yome]
-    (sab/html [:div.yome-controls (map (partial side-controls yome) (range (:num-sides yome)))]))
+    (sab/html [:div.yome-controls (map (partial side-controls yome) (range (side-count yome)))]))
 
 (defn select [n]
   (sab/html
    [:select.yome-type-select
     {:value    n
-     :onChange (prevent->value (fn [v]
-                                 (swap! app-state change-yome-sides v)))}
+     :onChange (prevent->value
+                (fn [v]
+                  (swap! app-state change-yome-sides v)))}
     (map-indexed
      (fn [i y]
        [:option {:value (+ 6 i)} y])
@@ -261,7 +259,7 @@
   (sab/html
    [:div.yome-widget
     [:div
-     (select (:num-sides state))]
+     (select (side-count state))]
     [:div {:style {:position "relative" :height 500 :width 500}}
      [:svg {:class "yome" :height 500 :width 500
             :viewBox "-250 -250 500 500"
@@ -282,4 +280,3 @@
 
 (defn on-js-reload []
   (swap! app-state update-in [:__figwheel_counter] inc)) 
-
