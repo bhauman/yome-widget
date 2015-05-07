@@ -1,7 +1,8 @@
 (ns yome.core
   (:require
-     [om.core :as om :include-macros true]
-     [sablono.core :as sab]))
+   [om.core :as om :include-macros true]
+   [clojure.string :as string]
+   [sablono.core :as sab]))
 
 (enable-console-print!)
 
@@ -14,21 +15,22 @@
     (.preventDefault e)
     (f)))
 
-(def yome-struct {:num-sides 6
-                  :sides [{:corner nil
-                           :face nil}
-                          {:corner nil
-                           :face nil}
-                          {:corner nil
-                           :face nil}
-                          {:corner nil
-                           :face nil}
-                          {:corner nil
-                           :face nil}
-                          {:corner nil
-                           :face nil}]})
+(defn prevent->value [f]
+  (fn [e]
+    (.preventDefault e)
+    (let [v (.-value (.-target e))]
+      (f v))))
 
-(defonce app-state (atom yome-struct))
+(defn change-yome-sides [yome v]
+  (assoc yome
+         :num-sides v
+         :sides (mapv (fn [i]
+                       (if-let [s (get-in yome [:sides i])]
+                         s
+                         {:corner nil
+                          :face nil})) (range v))))
+
+(defonce app-state (atom (change-yome-sides {} 8)))
 
 (def round js/Math.round)
 
@@ -65,10 +67,11 @@
   (sab/html [:line {:x1 (:x start)
                     :y1 (:y start)
                     :x2 (:x end)
-                    :y2 (:y end)
-                    #_:style
-                    #_{:stroke "rgb(0,130,240)"
-                       :stroke-width "2"} }]))
+                    :y2 (:y end)}]))
+
+(defn points [p-list]
+  (string/join " "  (map (comp #(string/join "," %) (juxt :x :y) )
+                         p-list)))
 
 (defn draw-window [yome]
   (let [theta (yome-theta yome)
@@ -77,14 +80,8 @@
                                                 indent
                                                 (- theta indent))
         mid (radial-point 100 (* 3 indent))]
-    [:g {:class "yome-window"}
-     (draw side)
-     (draw {:type :line
-            :start start
-            :end mid})
-     (draw {:type :line
-            :start mid
-            :end end})]))
+    [:polygon { :class "yome-window"
+                :points (points (list start end mid))}]))
 
 (defn draw-door-frame [yome]
   (let [theta (yome-theta yome)
@@ -95,15 +92,10 @@
         door-bottom (side-line 90 
                                (* 2.2 indent)
                                (- theta (* 2.2 indent)))]
-    [:g {:class "yome-door" :transform (str "rotate(-" (round (/ (yome-deg yome) 2)) ", 0, 0)")}
-     (draw door-top)
-     (draw door-bottom)
-     (draw {:type :line
-            :start (:start door-top)
-            :end (:start door-bottom)})
-     (draw {:type :line
-            :start (:end door-top)
-            :end (:end door-bottom)})]))
+    [:polygon {:class "yome-door"
+               :points (points (list (:start door-top) (:end door-top)
+                                     (:end door-bottom) (:start door-bottom)))
+               :transform (str "rotate(-" (round (/ (yome-deg yome) 2)) ", 0, 0)")}]))
 
 (defn draw-zip-door [yome]
   (let [indent (yome-theta {:num-sides (* 6 (:num-sides yome))})
@@ -201,6 +193,7 @@
       [:div.corner-controls-offset
        (map (fn [corner-control]
               [:a {:href "#"
+                   :className (name (:op corner-control))
                    :onClick (fn [] (corner-transition corner-control))}
                (control-to-string corner-control)])
             (corner-controls-to-render yome side index))]])))
@@ -233,16 +226,30 @@
 (defn draw-yome-controls [yome]
     (sab/html [:div.yome-controls (map (partial side-controls yome) (range (:num-sides yome)))]))
 
+
+(defn select [n]
+  (sab/html
+   [:select.yome-type-select
+    {:value    n
+     :onChange (prevent->value (fn [v]
+                                 (swap! app-state change-yome-sides v)))}
+    (map-indexed
+     (fn [i y]
+       [:option {:value (+ 6 i)} y])
+     ["HexaYome" "SeptaYome" "OctaYome"])]))
+
 (defn yome [state]
   (sab/html
    [:div.yome-widget
-    [:svg {:class "yome" :height 500 :width 500
-           :viewBox "-250 -250 500 500"
-           :preserveAspectRatio "xMidYMid meet" }
-     (draw-yome state)]
-    (draw-yome-controls state)
-    ]
-   ))
+    [:div
+     [:label "Sides"]
+     (select (:num-sides state))]
+    [:div {:style {:position "relative" :height 500 :width 500}}
+     [:svg {:class "yome" :height 500 :width 500
+            :viewBox "-250 -250 500 500"
+            :preserveAspectRatio "xMidYMid meet" }
+      (draw-yome state)]
+     (draw-yome-controls state)]]))
 
 (om/root
   (fn [data owner]

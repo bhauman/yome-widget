@@ -4,27 +4,36 @@ body {
     background-color: rgb(24,26,38);        
 }
 
-svg.yome line {
+svg.yome {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+svg.yome ellipse, svg.yome polygon, svg.yome line {
     stroke: rgb(0,130,240);
     stroke-width: 2;
+}
+
+svg.yome polygon,
+svg.yome ellipse {
+    fill: transparent;
 }
 
 svg.yome .yome-zip-door line {
     stroke: rgb(120,130,240);
 }
 
-svg.yome .yome-window line {
-    stroke: rgb(120,0,0);
+svg.yome .yome-door {
+
 }
 
 svg.yome .yome-window {
-    fill: rgb(120,0,0);
+
 }
 
 svg.yome .yome-stove-vent {
-    stroke: white;
-    stroke-width: 2;
-    fill: blue;
+
 }
 
 .yome-widget {
@@ -67,3 +76,5 @@ svg.yome .yome-stove-vent {
     top: -8px;
     left: -27px;     
 }
+
+@keyframes 
