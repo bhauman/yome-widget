@@ -22,15 +22,16 @@ svg.yome .yome-window {
 }
 
 svg.yome .yome-stove-vent {
-    fill: white;
-    
+    stroke: white;
+    stroke-width: 2;
+    fill: blue;
 }
 
 .yome-widget {
     position: relative;
 }
 
-.yome-controls {
+.yome-widget .yome-controls {
     position: absolute;
     top: 250px;
     left: 250px;
@@ -38,15 +39,31 @@ svg.yome .yome-stove-vent {
     font-family: sans-serif;
 }
 
-.yome-controls a {
+.yome-widget .yome-controls a {
     display: block;
     color: white;
     font-family: sans-serif;
     font-size: 12px;
 }
 
-.corner-controls-offset {
+.yome-widget .corner-controls {
+    width: 72px;
+    height: 46px
+}
+
+.yome-widget .corner-controls-offset {
     position: absolute;
     top: -21px;
     left: -35px;     
+}
+
+.yome-widget .face-controls {
+    width: 55px;
+    height: 16px;
+}
+
+.yome-widget .face-controls-offset {
+    position: absolute;
+    top: -8px;
+    left: -27px;     
 }

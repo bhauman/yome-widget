@@ -9,23 +9,26 @@
 
 ;; define your app data so that it doesn't get over-written on reload
 
+(defn prevent-> [f]
+  (fn [e]
+    (.preventDefault e)
+    (f)))
+
 (def yome-struct {:num-sides 6
-                  :sides [{:corner :door-frame
-                           :face :window}
+                  :sides [{:corner nil
+                           :face nil}
                           {:corner nil
                            :face nil}
                           {:corner nil
-                           :face :window}
+                           :face nil}
                           {:corner nil
                            :face nil}
-                          {:corner :stove-vent
-                           :face :window}
+                          {:corner nil
+                           :face nil}
                           {:corner nil
                            :face nil}]})
 
 (defonce app-state (atom yome-struct))
-
-
 
 (def round js/Math.round)
 
@@ -66,8 +69,6 @@
                     #_:style
                     #_{:stroke "rgb(0,130,240)"
                        :stroke-width "2"} }]))
-
-(reset! app-state yome-struct)
 
 (defn draw-window [yome]
   (let [theta (yome-theta yome)
@@ -119,8 +120,8 @@
 
 (defn draw-stove-vent [yome]
   (let [theta (yome-theta yome)
-        point (radial-point 150 0)]
-    [:circle {:cx (:x point) :cy (:y point) :r 14 :class "yome-stove-vent"}]))
+        point (radial-point 155 0)]
+    [:ellipse {:cx (:x point) :cy (:y point) :rx 14 :ry 8 :class "yome-stove-vent"}]))
 
 (def draw-map {:window     #'draw-window
                :door-frame #'draw-door-frame
@@ -144,6 +145,51 @@
    [:g {:transform (str "rotate(" (round (/ (yome-deg yome) 2)) ", 0, 0)")}
     (map (partial yome-side yome) (range (:num-sides yome)))]))
 
+(def base-corner-controls [:stove-vent :zip-door :door-frame])
+
+(defn count-item [yome item]
+  (count (filter #(= item %) (map :corner (:sides yome)))))
+
+(defn addable-stove-vent? [yome]
+  (zero? (count-item yome :stove-vent)))
+
+(defn addable-door? [yome]
+  (> 3 (+ (count-item yome :zip-door) (count-item yome :door-frame))))
+
+(defn get-controls-to-add [yome]
+  (keep identity
+        (concat
+         (when (addable-stove-vent? yome) [:stove-vent])
+         (when (addable-door? yome)
+           [:zip-door :door-frame]))))
+
+(defn corner-controls-to-render [yome side index]
+  (if-let [corner (:corner side)]
+    [{:op :remove
+      :item corner
+      :type :corner
+      :index index}]
+    (map (fn [x]
+           {:op :add
+            :item x
+            :type :corner
+            :index index})
+         (get-controls-to-add yome))))
+
+(defn control-to-string [{:keys [op item]}]
+  (str (if (= op :add) "+" "-") " "
+       (name item))) ;; TODO
+
+(defn corner-transition [{:keys [op item type index] :as ctl}]
+  (swap! app-state
+         (fn [state]
+           (let [res (update-in state [:sides index]
+                                (fn [side]
+                                  (assoc side type
+                                         (when (= op :add) item))))]
+             (prn state)
+             res))))
+
 (defn corner-controls [yome side index]
   (let [theta (+ (* (yome-theta yome) index)
                  (/ (yome-theta yome) 2))
@@ -151,46 +197,41 @@
     (sab/html
      [:div.corner-controls { :style {:position "absolute"
                                      :top (:y pos)
-                                     :left (:x pos)
-                                     :width "100px"}}
+                                     :left (:x pos)}}
       [:div.corner-controls-offset
-       [:a {:href "#"
-            :onChange (fn [] )}
-        "+ stove vent"]
-       [:a {:href "#"
-            :onChange (fn [] )}
-        "+ zip door"]
-       [:a {:href "#"
-            :onChange (fn [] )}
-        "+ door frame"]]])))
+       (map (fn [corner-control]
+              [:a {:href "#"
+                   :onClick (fn [] (corner-transition corner-control))}
+               (control-to-string corner-control)])
+            (corner-controls-to-render yome side index))]])))
+
+(defn face-control-to-render [yome side index]
+  {:op (if (:face side) :remove :add)
+   :item :window
+   :type :face
+   :index index})
 
 (defn face-controls [yome side index]
-  (let [theta (+ (* (yome-theta yome) index)
-                 (/ (yome-theta yome) 2))
-        pos (radial-point 220 theta)]
+  (let [theta (* (yome-theta yome) (+ 1 index))
+        pos (radial-point 200 theta)]
     (sab/html
      [:div.face-controls { :style {:position "absolute"
-                                     :top (:y pos)
-                                     :left (:x pos)
-                                     :width "100px"}}
+                                   :top (:y pos)
+                                   :left (:x pos)}}
       [:div.face-controls-offset
-       [:a {:href "#"
-            :onChange (fn [] )}
-        "+ stove vent"]
-       [:a {:href "#"
-            :onChange (fn [] )}
-        "+ zip door"]
-       [:a {:href "#"
-            :onChange (fn [] )}
-        "+ door frame"]]])))
+       (let [ctl (face-control-to-render yome side index)]
+         [:a {:href "#"
+              :onClick (prevent-> (fn [] (corner-transition ctl)))}
+          (control-to-string ctl)])]])))
 
 (defn side-controls [yome index]
   (let [side (get-in yome [:sides index])]
-    (sab/html [:div (corner-controls yome side index)])))
+    (sab/html [:div
+               (corner-controls yome side index)
+               (face-controls yome side index)])))
 
 (defn draw-yome-controls [yome]
-    (sab/html [:div.yome-controls (side-controls yome 0)]))
-
+    (sab/html [:div.yome-controls (map (partial side-controls yome) (range (:num-sides yome)))]))
 
 (defn yome [state]
   (sab/html
