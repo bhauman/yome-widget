@@ -81,6 +81,7 @@
                                                 (- theta indent))
         mid (radial-point 100 (* 3 indent))]
     [:polygon { :class "yome-window"
+                :key "yome-window"
                 :points (points (list start end mid))}]))
 
 (defn draw-door-frame [yome]
@@ -93,6 +94,7 @@
                                (* 2.2 indent)
                                (- theta (* 2.2 indent)))]
     [:polygon {:class "yome-door"
+               :key "yome-door"
                :points (points (list (:start door-top) (:end door-top)
                                      (:end door-bottom) (:start door-bottom)))
                :transform (str "rotate(-" (round (/ (yome-deg yome) 2)) ", 0, 0)")}]))
@@ -104,7 +106,8 @@
                                (* 0.15 indent)
                                (+ 0 (* -0.15 indent))))
                   (range 9))]
-    [:g {:class "yome-zip-door"}
+    [:g {:class "yome-zip-door"
+         :key "yome-zip-door"}
      (map draw
           (cons {:type :line
                  :start (radial-point 180 0)
@@ -113,7 +116,9 @@
 (defn draw-stove-vent [yome]
   (let [theta (yome-theta yome)
         point (radial-point 155 0)]
-    [:ellipse {:cx (:x point) :cy (:y point) :rx 14 :ry 8 :class "yome-stove-vent"}]))
+    [:ellipse {:cx (:x point) :cy (:y point) :rx 14 :ry 8
+               :class "yome-stove-vent"
+               :key "yome-stove-vent"}]))
 
 (def draw-map {:window     #'draw-window
                :door-frame #'draw-door-frame
@@ -148,6 +153,12 @@
 (defn addable-door? [yome]
   (> 3 (+ (count-item yome :zip-door) (count-item yome :door-frame))))
 
+(defn control-visible? [yome type]
+  (condp = type
+    :zip-door   (addable-door? yome)
+    :door-frame (addable-door? yome)
+    :stove-vent (addable-stove-vent? yome)))
+
 (defn get-controls-to-add [yome]
   (keep identity
         (concat
@@ -157,16 +168,28 @@
 
 (defn corner-controls-to-render [yome side index]
   (if-let [corner (:corner side)]
-    [{:op :remove
-      :item corner
-      :type :corner
-      :index index}]
     (map (fn [x]
-           {:op :add
-            :item x
-            :type :corner
-            :index index})
-         (get-controls-to-add yome))))
+           (if (= corner x)
+             {:op :remove
+              :item corner
+              :type :corner
+              :index index}
+             {:op :hidden
+              :item x
+              :type :corner
+              :index index})) base-corner-controls)
+    (map (fn [x]
+           (if (control-visible? yome x)
+             {:op :add
+              :item x
+              :type :corner
+              :index index}
+             {:op :hidden
+              :item x
+              :type :corner
+              :index index}))
+         base-corner-controls
+         #_(get-controls-to-add yome))))
 
 (defn control-to-string [{:keys [op item]}]
   (str (if (= op :add) "+" "-") " "
@@ -193,6 +216,9 @@
       [:div.corner-controls-offset
        (map (fn [corner-control]
               [:a {:href "#"
+                   #_:style #_{:visibility (if (= (:op corner-control) :hidden)
+                                         "hidden" "visible")}
+                   :key (name (:item corner-control))
                    :className (name (:op corner-control))
                    :onClick (fn [] (corner-transition corner-control))}
                (control-to-string corner-control)])
@@ -214,6 +240,7 @@
       [:div.face-controls-offset
        (let [ctl (face-control-to-render yome side index)]
          [:a {:href "#"
+              :class (:op ctl)
               :onClick (prevent-> (fn [] (corner-transition ctl)))}
           (control-to-string ctl)])]])))
 

@@ -24,20 +24,33 @@ svg.yome .yome-zip-door line {
     stroke: rgb(120,130,240);
 }
 
-svg.yome .yome-door {
+svg.yome .yome-zip-door {
+  -webkit-animation: appear 1s;
+}
 
+svg.yome .yome-door {
+  -webkit-animation: appear 1s;
 }
 
 svg.yome .yome-window {
-
+  -webkit-animation: appear 1s;
 }
 
 svg.yome .yome-stove-vent {
-
+  -webkit-animation: appear 1s;
 }
 
 .yome-widget {
     position: relative;
+}
+
+.yome-widget .corner-controls .hidden {
+    -webkit-animation: hide 0.2s;
+    visibility: hidden;
+}
+
+.yome-widget .corner-controls .add {
+    -webkit-animation: appear 0.3s;
 }
 
 .yome-widget .yome-controls {
@@ -77,4 +90,14 @@ svg.yome .yome-stove-vent {
     left: -27px;     
 }
 
-@keyframes 
+@-webkit-keyframes appear {
+    0% { opacity: 0; }
+    100% { opacity: 1;}
+}
+
+@-webkit-keyframes hide {
+    0%   { opacity: 1;
+           visibility: visible; }
+    100% { opacity: 0;
+           visibility: hidden; }
+}
