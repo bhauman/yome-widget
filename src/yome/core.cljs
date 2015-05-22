@@ -435,7 +435,10 @@
   (let [data (extract-mail-data state)]
     (prn data)
     (go
-      (let [res (<! (http/post "http://localhost:9292/mail/deets" {:form-params data}))]
+      (let [res (<! (http/post
+                     "https://yomewidget.herokuapp.com/mail/deets"
+                     #_"http://localhost:9292/mail/deets"
+                     {:form-params data}))]
         (prn res)))))
 
 (defn shipping-form [state]
