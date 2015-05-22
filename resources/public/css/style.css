@@ -5,7 +5,7 @@
 }
 
 body.yome-widget-website-demo {
-    background: #111 url(//dreamgrowers.desi/redskyshelters.com/wp-content/uploads/Redsky-BGV8.jpg) top right no-repeat fixed;
+    background: #111 url(http://dreamgrowers.desi/redskyshelters.com/wp-content/uploads/Redsky-BGV8.jpg) top right no-repeat fixed;
     font-family: 'Maven Pro', 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -45,16 +45,16 @@ svg.yome .yome-stove-vent {
 .yome-widget {
     position: relative;
     padding: 10px;
-    background: rgba(0,0,0,0.55);
+    background: rgba(0,0,0,0.41);
     border-radius: 10px;
 }
 
-.yome-widget .corner-controls .hidden {
+.yome-widget .corner-controls .op-hidden {
     -webkit-animation: hide 0.2s;
     visibility: hidden;
 }
 
-.yome-widget .corner-controls .add {
+.yome-widget .corner-controls .op-add {
     -webkit-animation: appear 0.3s;
 }
 
@@ -73,13 +73,13 @@ svg.yome .yome-stove-vent {
     font-size: 12px;
     text-decoration: none;
     transition: color 0.5s;
-    line-height: 1.3em;
+    line-height: 1.2em;
 }
 
-.yome-widget .yome-controls a.remove {
-    background-color: transparent;
+.yome-widget .yome-controls a.op-remove {
     color: rgb(239, 131, 75);
 }
+
 
 .yome-widget .corner-controls {
     width: 72px;
