@@ -34,6 +34,7 @@
               :compiler {:output-to "resources/public/js/compiled/yome.js"
                          :main yome.core                         
                          :optimizations :advanced
+                         :output-wrapper true
                          :pretty-print false}}]}
 
   :figwheel {
