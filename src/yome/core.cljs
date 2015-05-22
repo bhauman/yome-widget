@@ -3,7 +3,8 @@
    [om.core :as om :include-macros true]
    [clojure.string :as string]
    [clojure.set :refer [map-invert]]
-   [sablono.core :as sab]))
+   [sablono.core :as sab]
+   [ankha.core :as ankha]))
 
 (enable-console-print!)
 
@@ -18,6 +19,12 @@
     (let [v (.-value (.-target e))]
       (f v))))
 
+(defn prevent->checked [f]
+  (fn [e]
+    (.preventDefault e)
+    (let [v (.-checked (.-target e))]
+      (f v))))
+
 (defn change-yome-sides [yome v]
   (assoc yome
          :sides (mapv (fn [i]
@@ -26,7 +33,8 @@
                          {:corner nil
                           :face nil})) (range v))))
 
-(defonce app-state (atom (change-yome-sides {} 8)))
+(defonce app-state (atom (change-yome-sides {:form {}} 8)))
+
 
 (def code-map {nil "r"
               :door-frame "d"
@@ -56,6 +64,9 @@
 (defn side-count [yome]
   (count (:sides yome)))
 
+(defn window-count [yome]
+  (count (filter :face (:sides yome))))
+
 (defn yome-theta [yome]
   (/ (* 2 js/Math.PI) (side-count yome)))
 
@@ -66,8 +77,8 @@
   (let [sint (js/Math.sin theta)
         cost (js/Math.cos theta)]
     (assoc point
-           :x (round (- (* x cost) (* y sint)))
-           :y (round (+ (* x sint) (* y cost))))))
+           :x (- (* x cost) (* y sint))
+           :y (+ (* x sint) (* y cost)))))
 
 (defn radial-point [radius theta]
   (rotate theta {:x 0 :y radius}))
@@ -243,7 +254,7 @@
 (defn draw-yome-controls [yome]
     (sab/html [:div.yome-controls (map (partial side-controls yome) (range (side-count yome)))]))
 
-(defn select [n]
+(defn select-yome-size [n]
   (sab/html
    [:select.yome-type-select
     {:value    n
@@ -255,21 +266,138 @@
        [:option {:value (+ 6 i)} y])
      ["HexaYome" "SeptaYome" "OctaYome"])]))
 
+(defn select-yome-kit [form-state]
+  (sab/html
+   [:select.yome-kit
+    {:value    (:kit form-state)
+     :onChange (prevent->value
+                (fn [v]
+                  (om/update! form-state :kit (= v "true"))))}
+    (map
+     (fn [[t v]]
+       [:option {:value v} t])
+     [["Yome" false] ["Yome Kit" true]])]))
+
+(def price-table {:yome {6 2460
+                         7 3100
+                         8 3680}
+                  :yome-kit {6 1425
+                             7 2000
+                             8 2300}
+                  :window {:reg  120
+                           :poly 165}
+                  :wall-insulation            {6 660 7 760 8 860}
+                  :roof-insulation-kit        {7 365 8 440}
+                  :roof-insulation-plus-kit   {7 580 8 670}
+                  :hemp-or-sunglow-sidewalls  {6 315 7 315 8 365}
+                  :snow-load-kit              {6 180 7 280 8 360}
+                  :insulation-strips          {6 70 7 80 8 90}
+                  :fabric-flashing            {6 45 7 45 8 65}
+                  :stove-vent-hole            {7 50 8 50}})
+
+(def option-names {:wall-insulation           "Wall Insulation"
+                   :roof-insulation-kit       "Roof Insulation Kit"
+                   :roof-insulation-plus-kit  "Roof Insulation Plus Kit"
+                   :hemp-or-sunglow-sidewalls "Hemp or SunGlow Sidewalls"
+                   :snow-load-kit             "Snow Load Kit"
+                   :insulation-strips         "Insulation Strips"
+                   :fabric-flashing           "Fabric Flashing"
+                   :stove-vent-hole           "Stove Vent Hole"})
+
+
+
+(defn window-cost [state]
+  (* (window-count state)
+     (get-in price-table
+             [:window
+              (if (get-in state [:form :poly-window])
+                :poly
+                :reg)])))
+
+(defn option-cost [type state]
+  (get-in price-table [type (side-count state)]))
+
+(defn total-option-cost [state]
+  (let [opts (keep (fn [[k v]] (when v k)) (:form state))]
+    (reduce + 0 (keep (fn [t] (option-cost t state)) opts))))
+
+(defn yome-cost [state]
+  (get-in price-table [(if (get-in state [:form :kit])
+                         :yome-kit
+                         :yome)
+                       (side-count state)]))
+
+(defn get-price [state]
+  (apply + ((juxt yome-cost window-cost total-option-cost) state)))
+
+(defn event-checked? [e]
+  (.-checked (.-target e)))
+
+(defn checkbox [label value onchange]
+  (sab/html [:div
+             [:label
+              [:input.yome-widget-checkbox {:type "checkbox"
+                       :value 1
+                       :checked value
+                       :onChange onchange}]
+              [:span.yome-widget-checkbox-label label]]]))
+
+(defn polycarbonate-window-choice [state]
+  (let [poly-cost (* (window-count state)
+                     (-> price-table :window :poly))]
+    (checkbox (str "Polycarbonate Window Covers $" poly-cost)
+              (-> state :form :poly-window)
+              (prevent->checked
+               (fn [c] (om/update! state [:form :poly-window] c))))))
+
+(defn option-checkbox [lab type state]
+  (if-let [cost (option-cost type state)]
+    (checkbox (str lab " $" cost)
+              (-> state :form type)
+              (prevent->checked
+               (fn [c] (om/update! state [:form type] c))))
+    (sab/html [:span])))
+
+(defn options [state]
+  (let [sides (side-count state)]
+    (sab/html
+     [:div.yome-widget-form-control
+      [:div.yome-widget-label [:label "Available Options"]]
+      (polycarbonate-window-choice state)
+      [:div
+       (map (fn [[t n]]
+              (option-checkbox n t state))
+            option-names)]])))
+
 (defn yome [state]
   (sab/html
-   [:div.yome-widget
-    [:div
-     (select (side-count state))]
-    [:div {:style {:position "relative" :height 500 :width 500}}
-     [:svg {:class "yome" :height 500 :width 500
-            :viewBox "-250 -250 500 500"
-            :preserveAspectRatio "xMidYMid meet" }
-      (draw-yome state)]
-     (draw-yome-controls state)]
+   [:div.yome-widget {:style { :color "#ccc" }}
+    [:div.yome-widget-top-price-box [:div.top-price [:span.total-price "Total Price: "] "$" (get-price state)]]
+    [:div.yome-widget-form-control
+     [:div.yome-widget-label [:label "Yome Type (Choose Yome Size)"]]
+     (select-yome-size (side-count state))]
+    [:div.yome-widget-form-control
+     [:div.yome-widget-label [:label "Yome Kit?"]]
+     (select-yome-kit (:form state))]
+    [:div.yome-widget-form-control
+     [:div.yome-widget-label [:label "Layout your yome:"]]
+     [:div {:style {:position "relative" :height 500 :width 500}}
+      [:svg {:class "yome" :height 500 :width 500
+             :viewBox "-250 -250 500 500"
+             :preserveAspectRatio "xMidYMid meet" }
+       (draw-yome state)]
+      (draw-yome-controls state)]]
+    (options state)
+    [:div [:div "Price"]
+     (str "$" (get-price state))
+     ]
     [:div [:input {:type "text"
                    :value (serialize-yome state)
                    :onChange (prevent->value (fn [v]
-                                               (swap! app-state merge (deserialize-yome v))))}]]]))
+                                               (swap! app-state merge (deserialize-yome v))))}]]
+    #_[:div
+     {:style {:color "white"}}
+     (om/build ankha/inspector @app-state)]]))
 
 (om/root
   (fn [data owner]
