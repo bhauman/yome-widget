@@ -404,7 +404,7 @@
     (reify om/IRender
       (render [_] (yome data))))
   app-state
-  {:target (. js/document (getElementById "app"))})
+  {:target (. js/document (getElementById "com-rigsomelight-yome-widget"))})
 
 (defn on-js-reload []
   (swap! app-state update-in [:__figwheel_counter] inc)) 

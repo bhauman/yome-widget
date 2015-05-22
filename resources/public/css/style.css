@@ -4,7 +4,7 @@
     float: right;
 }
 
-body {
+body.yome-widget-website-demo {
     background: #111 url(//dreamgrowers.desi/redskyshelters.com/wp-content/uploads/Redsky-BGV8.jpg) top right no-repeat fixed;
     font-family: 'Maven Pro', 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
