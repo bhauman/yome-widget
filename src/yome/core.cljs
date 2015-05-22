@@ -222,7 +222,7 @@
               [:a {:href "#"
                    :key (name (:item corner-control))
                    :className (name (:op corner-control))
-                   :onClick (prevent-> (fn [] (corner-transition corner-control)))}
+                   :onClick (fn [] (corner-transition corner-control))}
                (control-to-string corner-control)])
             (corner-controls-to-render yome side index))]])))
 
