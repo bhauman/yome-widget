@@ -51,6 +51,52 @@ svg.yome .yome-stove-vent {
     color: white;
 }
 
+.yome-widget-options-container {
+    text-align: left;
+    width: 280px;
+    margin: auto;
+}
+
+.yome-widget-shipping-form-container {
+    width: 200px;
+    margin: auto;
+}
+
+.yome-widget-shipping-form-container input,
+.yome-widget-shipping-form-container textarea {
+    width: 200px;
+}
+
+.yome-svg-container {
+    position: relative;
+    height: 500px;
+    width: 500px;
+    margin: auto;
+}
+
+.yome-doors-windows-text {
+    color: #ccc;
+    font-size: 0.9em;
+}
+
+.yome-shipping-button {
+
+}
+
+.yome-graphic-image {
+    float: right;
+    opacity: 0.8;
+    padding-left: 10px;
+}
+
+.yome-widget-center {
+    text-align: center;
+}
+
+.yome-widget-inline-label {
+    display: block;
+}
+
 .yome-widget-checkbox-label {
     color: white;
     color: #f2eac4;    

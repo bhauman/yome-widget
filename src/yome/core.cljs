@@ -4,7 +4,11 @@
    [clojure.string :as string]
    [clojure.set :refer [map-invert]]
    [sablono.core :as sab]
-   [ankha.core :as ankha]))
+   [cljs.core.async :as async
+    :refer [<! >! chan close! sliding-buffer put! take! alts! timeout onto-chan map< to-chan filter<]]   
+   [cljs-http.client :as http]
+   [ankha.core :as ankha])
+  (:require-macros [cljs.core.async.macros :as m :refer [go alt! go-loop]]))
 
 (enable-console-print!)
 
@@ -43,21 +47,27 @@
 
 (def decode-map (map-invert code-map))
 
+(declare convert-options unconvert-options)
+
 (defn serialize-yome [yome]
   (str
    (apply str (map (comp #(if % "w" "r") :face) (:sides yome)))
    ":"
-   (apply str (map (comp code-map :corner) (:sides yome)))))
+   (apply str (map (comp code-map :corner) (:sides yome)))
+   ":"
+   (convert-options yome)))
 
 (defn deserialize-yome [s]
-  (let [[faces corners] (string/split s ":")
+  (let [[faces corners binary-code] (string/split s ":")
         sides (map #(if (= "w" %)
                       {:face :window}
                       {:face nil}) faces)
         sides (mapv (fn [s c]
                      (assoc s :corner (decode-map c)))
-                   sides corners)]
-    {:sides sides}))
+                    sides corners)
+        selected-options (unconvert-options binary-code)]
+    (reduce (fn [a o] (assoc-in a [:form o] true))
+            {:sides sides} selected-options)))
 
 (def round js/Math.round)
 
@@ -239,6 +249,7 @@
                   :type :face
                   :index index}]
          [:a {:href "#"
+              :key (name (:item ctl))              
               :class (str
                       "op-"
                       (name (:op ctl))
@@ -306,7 +317,38 @@
                    :fabric-flashing           "Fabric Flashing"
                    :stove-vent-hole           "Stove Vent Hole"})
 
+(def binary-options [:kit
+                     :poly-window
+                     :wall-insulation
+                     :roof-insulation-kit       
+                     :roof-insulation-plus-kit  
+                     :hemp-or-sunglow-sidewalls 
+                     :snow-load-kit             
+                     :insulation-strips         
+                     :fabric-flashing           
+                     :stove-vent-hole])
 
+(defn int->mask [i]
+  (if (zero? i) 1 (bit-shift-left 1 i)))
+
+(defn convert-options [state]
+  (reduce (fn [a [i k]]
+            (if (get-in state [:form k])
+              (bit-or a (int->mask i))
+              a))
+          0
+          (map-indexed vector binary-options)))
+
+(defn unconvert-options [options-int]
+  (reduce
+   (fn [a i]
+     (if (= (bit-and
+             options-int
+             (int->mask i))
+            (int->mask i))
+       (cons (nth binary-options i) a)
+       a))
+   '() (range (count binary-options))))
 
 (defn window-cost [state]
   (* (window-count state)
@@ -336,7 +378,7 @@
   (.-checked (.-target e)))
 
 (defn checkbox [label value onchange]
-  (sab/html [:div
+  (sab/html [:div {:key label}
              [:label
               [:input.yome-widget-checkbox {:type "checkbox"
                        :value 1
@@ -364,40 +406,97 @@
   (let [sides (side-count state)]
     (sab/html
      [:div.yome-widget-form-control
-      [:div.yome-widget-label [:label "Available Options"]]
-      (polycarbonate-window-choice state)
-      [:div
-       (map (fn [[t n]]
-              (option-checkbox n t state))
-            option-names)]])))
+      [:div.yome-widget-label [:label "4. Choose any of these available options:"]]
+      [:div.yome-widget-center
+       [:div.yome-widget-options-container 
+        (polycarbonate-window-choice state)      
+        [:div
+         (map (fn [[t n]]
+                (option-checkbox n t state))
+              option-names)]]]])))
+
+
+(defn ship-form-input [state label ky]
+  [:div.yome-widget-form-control
+   [:label.yome-widget-inline-label label]
+   [:input {:type "text" :name (name ky)
+            :value (get-in state [:shipping-form ky])
+            :onChange
+            (prevent->value (fn [v]
+                              (om/transact! state :shipping-form
+                                            (fn [f] (assoc f ky v)))))}]])
+
+(defn extract-mail-data [state]
+  (assoc
+   (get state :shipping-form)
+   :code (serialize-yome state)))
+
+(defn send-form-data [state]
+  (let [data (extract-mail-data state)]
+    (prn data)
+    (go
+      (let [res (<! (http/post "http://localhost:9292/mail/deets" {:form-params data}))]
+        (prn res)))))
+
+(defn shipping-form [state]
+  (sab/html
+   [:div.yome-widget-shipping-form-container
+    (ship-form-input state "Name" :name)
+    (ship-form-input state "Email" :email)
+    (ship-form-input state "City" :city)
+    (ship-form-input state "ZIP Code" :zip)
+    [:div.yome-widget-form-control
+     [:label.yome-widget-inline-label "Comments"]
+     [:textarea {:type "text" :name (name :comments)
+                 :value (get-in state [:shipping-form :comments])
+                 :onChange
+                 (prevent->value (fn [v]
+                                   (om/transact! state :shipping-form
+                                                 (fn [f] (assoc f :comments v)))))}]]
+    [:button.yome-shipping-button
+     {:onClick (prevent-> (fn [] (send-form-data state)))}
+     "Get Shipping Estimate"]]))
 
 (defn yome [state]
   (sab/html
    [:div.yome-widget
-    [:div.yome-widget-top-price-box [:div.top-price [:span.total-price "Total Price: "] "$" (get-price state)]]
+    [:h1.yome-widget-header "BUILD YOUR YOME"]
     [:div.yome-widget-form-control
-     [:div.yome-widget-label [:label "Yome Type (Choose Yome Size)"]]
-     (select-yome-size (side-count state))]
+     [:div.yome-widget-label [:label "1. Would you like a complete Yome or a Yome Kit?"]]
+     [:div.yome-widget-center (select-yome-kit (:form state))]]
     [:div.yome-widget-form-control
-     [:div.yome-widget-label [:label "Yome Kit?"]]
-     (select-yome-kit (:form state))]
+     [:div.yome-widget-label [:label "2. How big do you want your Yome to be?"]]
+     [:div.yome-widget-center (select-yome-size (side-count state))]]
+
     [:div.yome-widget-form-control
-     [:div.yome-widget-label [:label "Layout your yome:"]]
-     [:div {:style {:position "relative" :height 500 :width 500}}
+     [:div.yome-widget-label [:label "3. Choose the positions of the door and windows:"]]
+     [:div.yome-widget-flex 
+      [:div.yome-doors-windows-text 
+       [:img.yome-graphic-image {:src "frameup.png" }]
+       [:p "The walls of a Yome are made up of a series of upward and downward facing triangles (see illus). The diagram below represents the top plate (the plate between the top of the walls and the bottom of the roof). The diagram's corners represent the tips of the upward facing triangles and the edges represent the downward facing triangles."]
+       [:p "The doors and stovepipe vent are placed in upward triangles while the windows and large screen opening are placed in the downward triangles."]]]
+     [:div.yome-svg-container 
       [:svg {:class "yome" :height 500 :width 500
              :viewBox "-250 -250 500 500"
              :preserveAspectRatio "xMidYMid meet" }
        (draw-yome state)]
       (draw-yome-controls state)]]
     (options state)
-    [:div [:div.yome-widget-label [:label "Price"]]
-     (str "$" (get-price state))]
-    
-    #_[:div [:input {:type "text"
+    [:div [:div.yome-widget-label [:label "4. Review price below:"]]
+     [:h4.yome-widget-center  "Price Before Shipping: " (str "$" (get-price state))]]
+
+    [:div [:div.yome-widget-label [:label "5. Get a shipping estimate:"]]
+     (if (:show-shipping-form state)
+       (shipping-form state)
+       [:div.yome-widget-center  [:a {:href "#"
+                                    :onClick
+                                      (prevent-> (fn [_] (om/update! state :show-shipping-form true)))}
+                                  "Get Shipping Estimate"]])]
+    [:div [:input {:type "text"
                    :value (serialize-yome state)
                    :onChange (prevent->value (fn [v]
                                                (swap! app-state merge (deserialize-yome v))))}]]
-    #_[:div
+    [:div
      {:style {:color "white"}}
      (om/build ankha/inspector @app-state)]]))
 
@@ -407,6 +506,22 @@
       (render [_] (yome data))))
   app-state
   {:target (. js/document (getElementById "com-rigsomelight-yome-widget"))})
+
+(defn handle-hash-change []
+  (let [hash (.-hash js/location)]
+    (when-let [[_ code] (re-matches #"#\!/yome/(.*)" hash)]
+      (reset! app-state (deserialize-yome code)))))
+
+;; not sure if I need this
+(defonce location-hash-change
+  (do
+    (.addEventListener js/window "hashchange" (fn [] (handle-hash-change)))
+    true))
+
+(defonce initial-hash-check
+  (do
+    (js/setTimeout handle-hash-change 600)
+    true))
 
 (defn on-js-reload []
   (swap! app-state update-in [:__figwheel_counter] inc)) 
