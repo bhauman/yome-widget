@@ -373,7 +373,7 @@
 
 (defn yome [state]
   (sab/html
-   [:div.yome-widget {:style { :color "#ccc" }}
+   [:div.yome-widget
     [:div.yome-widget-top-price-box [:div.top-price [:span.total-price "Total Price: "] "$" (get-price state)]]
     [:div.yome-widget-form-control
      [:div.yome-widget-label [:label "Yome Type (Choose Yome Size)"]]
@@ -390,10 +390,10 @@
        (draw-yome state)]
       (draw-yome-controls state)]]
     (options state)
-    [:div [:div "Price"]
-     (str "$" (get-price state))
-     ]
-    [:div [:input {:type "text"
+    [:div [:div.yome-widget-label [:label "Price"]]
+     (str "$" (get-price state))]
+    
+    #_[:div [:input {:type "text"
                    :value (serialize-yome state)
                    :onChange (prevent->value (fn [v]
                                                (swap! app-state merge (deserialize-yome v))))}]]
