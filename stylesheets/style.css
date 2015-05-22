@@ -73,9 +73,11 @@ svg.yome .yome-stove-vent {
     font-size: 12px;
     text-decoration: none;
     transition: color 0.5s;
+    line-height: 1.2em;
 }
 
 .yome-widget .yome-controls a.remove {
+    background-color: transparent;
     color: rgb(239, 131, 75);
 }
 
