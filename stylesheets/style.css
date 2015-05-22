@@ -4,8 +4,8 @@
     float: right;
 }
 
-body {
-    background: #111 url(http://dreamgrowers.desi/redskyshelters.com/wp-content/uploads/Redsky-BGV8.jpg) top right no-repeat fixed;
+body.yome-widget-website-demo {
+    background: #111 url(//dreamgrowers.desi/redskyshelters.com/wp-content/uploads/Redsky-BGV8.jpg) top right no-repeat fixed;
     font-family: 'Maven Pro', 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -73,14 +73,13 @@ svg.yome .yome-stove-vent {
     font-size: 12px;
     text-decoration: none;
     transition: color 0.5s;
-    line-height: 1.2em;
+    line-height: 1.3em;
 }
 
 .yome-widget .yome-controls a.remove {
     background-color: transparent;
     color: rgb(239, 131, 75);
 }
-
 
 .yome-widget .corner-controls {
     width: 72px;
