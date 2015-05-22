@@ -51,7 +51,7 @@ svg.yome .yome-stove-vent {
     color: white;
 }
 
-.yome-widget-checkbox-label {
+#com-rigsomelight-yome-widget .yome-widget span.yome-widget-checkbox-label {
     color: white;
     color: #f2eac4;    
 }
