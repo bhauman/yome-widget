@@ -18,6 +18,7 @@ svg.yome {
 svg.yome ellipse, svg.yome polygon, svg.yome line {
     stroke: rgb(108, 141, 169);
     /* stroke: rgb(0,130,240); */
+    stroke: #2997ab;
     stroke-width: 2;
 }
 
@@ -47,6 +48,12 @@ svg.yome .yome-stove-vent {
     padding: 10px;
     background: rgba(0,0,0,0.41);
     border-radius: 10px;
+    color: white;
+}
+
+.yome-widget-checkbox-label {
+    color: white;
+    color: #f2eac4;    
 }
 
 .yome-widget .corner-controls .op-hidden {
@@ -62,13 +69,14 @@ svg.yome .yome-stove-vent {
     position: absolute;
     top: 250px;
     left: 250px;
-    color: #ccc;
+    /* color: #ccc; */
     font-family: sans-serif;
 }
 
 .yome-widget .yome-controls a {
     display: block;
     color: #ccc;
+    color: #f2eac4;
     font-family: sans-serif;
     font-size: 12px;
     text-decoration: none;
