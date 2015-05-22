@@ -45,7 +45,7 @@ svg.yome .yome-stove-vent {
 .yome-widget {
     position: relative;
     padding: 10px;
-    background: rgba(0,0,0,0.55);
+    background: rgba(0,0,0,0.41);
     border-radius: 10px;
 }
 
@@ -73,9 +73,10 @@ svg.yome .yome-stove-vent {
     font-size: 12px;
     text-decoration: none;
     transition: color 0.5s;
+    line-height: 1.2em;
 }
 
-.yome-widget .yome-controls a.remove {
+.yome-widget .yome-controls a.op-remove {
     color: rgb(239, 131, 75);
 }
 

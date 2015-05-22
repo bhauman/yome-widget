@@ -221,7 +221,7 @@
        (map (fn [corner-control]
               [:a {:href "#"
                    :key (name (:item corner-control))
-                   :className (name (:op corner-control))
+                   :className (str "op-" (name (:op corner-control)))
                    :onClick (fn [] (corner-transition corner-control))}
                (control-to-string corner-control)])
             (corner-controls-to-render yome side index))]])))
@@ -239,9 +239,11 @@
                   :type :face
                   :index index}]
          [:a {:href "#"
-              :class (str (name (:op ctl))
-                          " "
-                          (name (:item ctl)))
+              :class (str
+                      "op-"
+                      (name (:op ctl))
+                      " "
+                      (name (:item ctl)))
               :onClick (prevent-> (fn [] (corner-transition ctl)))}
           (control-to-string ctl)])]])))
 
