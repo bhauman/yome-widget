@@ -526,7 +526,7 @@
     (options state)
 
     [:div [:div.yome-widget-label [:label "4. Review price below:"]]
-     [:h4.yome-widget-center  "Price Before Shipping: " (str "$" (get-price state))]]
+     [:h3.yome-widget-center  "Price Before Shipping: " (str "$" (get-price state))]]
 
     (get-shipping-estimate state)
 
