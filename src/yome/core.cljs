@@ -68,7 +68,7 @@
         sides (mapv (fn [s c]
                      (assoc s :corner (decode-map c)))
                     sides corners)
-        selected-options (unconvert-options binary-code)]
+        selected-options (unconvert-options (js/parseInt binary-code))]
     (reduce (fn [a o] (assoc-in a [:form o] true))
             {:sides sides} selected-options)))
 
@@ -561,7 +561,7 @@
 
 (defonce initial-hash-check
   (do
-    (js/setTimeout handle-hash-change 1500)
+    (js/setTimeout handle-hash-change 2000)
     true))
 
 (defn on-js-reload []

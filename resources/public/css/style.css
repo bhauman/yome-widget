@@ -77,7 +77,7 @@ svg.yome .yome-stove-vent {
 
 .yome-svg-container {
     position: relative;
-    height: 500px;
+    height: 500px; 
     width: 500px;
     margin: auto;
 }
@@ -200,4 +200,18 @@ svg.yome .yome-stove-vent {
            visibility: visible; }
     100% { opacity: 0;
            visibility: hidden; }
+}
+
+@media (max-width: 620px) {
+    .yome-graphic-image {
+        display: none;
+    }
+    div.yome-svg-container {
+        margin: 0px;
+        width: 300px;
+        height: 400px;
+       /* top: -50px;
+        left: -50px; */
+        transform: scale(0.78);
+  }
 }
