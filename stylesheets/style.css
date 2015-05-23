@@ -210,9 +210,9 @@ svg.yome .yome-stove-vent {
         margin: 0px;
         width: 300px;
         height: 400px;
-       /* top: -50px;
-        left: -50px; */
-        -webkit-transform: scale(0.78);
+        top: -50px;
+        left: -50px;
+        -webkit-transform: scale(0.7);
         transform: scale(0.78);        
   }
 }
