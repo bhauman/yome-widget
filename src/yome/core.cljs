@@ -392,7 +392,9 @@
 
 (defn polycarbonate-window-choice [state]
   (let [poly-cost (* (window-count state)
-                     (-> price-table :window :poly))]
+                     (let [window-cost (:window price-table)]
+                     (- (:poly window-cost)
+                        (:reg window-cost))))]
     (checkbox (str "Polycarbonate Window Covers $" poly-cost)
               (-> state :form :poly-window)
               (prevent->checked
@@ -498,7 +500,7 @@
      [:label "3. Choose the positions of the door and windows:"]]
     [:div.yome-widget-flex 
      [:div.yome-doors-windows-text 
-     [:img.yome-graphic-image {:src "frameup.png" }]
+     [:img.yome-graphic-image {:src "http://rigsomelight.com/yome-widget/frameup.png" }]
       [:p "The walls of a Yome are made up of a series of upward and downward facing triangles (see illus). The diagram below represents the top plate (the plate between the top of the walls and the bottom of the roof). The diagram's corners represent the tips of the upward facing triangles and the edges represent the downward facing triangles."]
       [:p "The doors and stovepipe vent are placed in upward triangles while the windows and large screen opening are placed in the downward triangles."]]]
     [:div.yome-svg-container 
@@ -512,7 +514,7 @@
   (sab/html
    [:div.yome-widget
     [:h1.yome-widget-header "BUILD YOUR YOME"]
-    [:div.yome-widget-form-control {:key "kit-header"}
+    [:div.yome-widget-form-control
      [:div.yome-widget-label [:label "1. Would you like a complete Yome or a Yome Kit?"]]
      [:div.yome-widget-center (select-yome-kit (:form state))]]
     [:div.yome-widget-form-control
