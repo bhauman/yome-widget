@@ -22,7 +22,7 @@ helpers do
 
   def send_mail(data)
     Mail.deliver do
-      to 'bhauman@gmail.com'
+      to 'bhauman@gmail.com, redskyshelters@gmail.com'
       from 'bhauman@gmail.com'
       subject 'Yome form filled out'
       body "A New Yome Request!!
