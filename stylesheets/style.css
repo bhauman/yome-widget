@@ -62,8 +62,7 @@ svg.yome .yome-stove-vent {
 
 .yome-widget-options-container {
     text-align: left;
-    width: 310px;
-    margin: auto;
+    margin-top: 0.5em;
 }
 
 .yome-widget-shipping-form-container {
@@ -78,7 +77,7 @@ svg.yome .yome-stove-vent {
 
 .yome-svg-container {
     position: relative;
-    height: 500px;
+    height: 500px; 
     width: 500px;
     margin: auto;
 }
@@ -93,15 +92,32 @@ svg.yome .yome-stove-vent {
 }
 
 .yome-shipping-button {
-
+    padding: 1em;
+    width: 200px;
+    border-radius: 3px;
+    color: white;
+    font-size: 0.9em;
+    border-color: #077589;
+    border-width: 1px;
+    background-color: #2997ab;
+    text-align: center;
 }
 
-#com-rigsomelight-yome-widget .yome-graphic-image {
+.yome-shipping-button:disabled {
+    background-color: grey;
+    border-color: grey;
+    color: #ddd;
+}
+
+.yome-graphic-image {
+    background: transparent url(http://rigsomelight.com/yome-widget/frameup.png) no-repeat center center;
+    /* background-size: cover; */
     float: right;
     opacity: 0.8;
-    padding-left: 10px;
+    margin-left: 20px;
     border: 0px;
-    width: 275px;
+    width: 285px;
+    height: 180px;
     position:relative;
     top: -15px;
 }
@@ -184,4 +200,18 @@ svg.yome .yome-stove-vent {
            visibility: visible; }
     100% { opacity: 0;
            visibility: hidden; }
+}
+
+@media (max-width: 420px) {
+    .yome-graphic-image {
+        display: none;
+    }
+    div.yome-svg-container {
+        margin: 0px;
+        width: 300px;
+        height: 400px;
+       /* top: -50px;
+        left: -50px; */
+        transform: scale(0.78);
+  }
 }
