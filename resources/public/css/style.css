@@ -212,6 +212,8 @@ svg.yome .yome-stove-vent {
         height: 400px;
        /* top: -50px;
         left: -50px; */
+        -webkit-transform: scale(0.78);
         transform: scale(0.78);
-  }
+    }
 }
+
