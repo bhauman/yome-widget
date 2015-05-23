@@ -37,7 +37,7 @@ Comments:
 #{ data[:comments] }
 
 You can view the yome here:
-https://rigsomelight.com/yome-widget/#!/#{ data[:code] } 
+http://rigsomelight.com/yome-widget/#!/yome/#{ data[:code] } 
 
 Enjoy!!!"
     end    
