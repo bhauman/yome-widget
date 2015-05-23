@@ -43,7 +43,6 @@
 
 (defonce app-state (atom (change-yome-sides {:form {}} 8)))
 
-
 (def code-map {nil "r"
               :door-frame "d"
               :stove-vent "p"
@@ -140,7 +139,7 @@
                :key "yome-door"
                :points (points (list (:start door-top) (:end door-top)
                                      (:end door-bottom) (:start door-bottom)))
-               :transform (str "rotate(-" (round (/ (yome-deg yome) 2)) ", 0, 0)")}])))
+               :transform (str "rotate(-" (/ (yome-deg yome) 2) ", 0, 0)")}])))
 
 (defmethod draw :zip-door [_ yome]
   (let [theta (yome-theta yome)
@@ -168,7 +167,7 @@
   (let [num-sides (side-count yome)
         {:keys [corner face]} (get-in yome [:sides index])]
     (sab/html [:g {:transform (str "rotate("
-                                   (round (* (yome-deg yome) index))
+                                   (* (yome-deg yome) index)
                                    ", 0, 0)")
                    :class "yome-side"
                    :key (str "yome-side-" index)}
@@ -179,7 +178,7 @@
 
 (defn draw-yome [yome]
   (sab/html
-   [:g {:transform (str "rotate(" (round (/ (yome-deg yome) 2)) ", 0, 0)")}
+   [:g {:transform (str "rotate(" (/ (yome-deg yome) 2) ", 0, 0)")}
     (map (partial yome-side yome) (range (side-count yome)))]))
 
 (def base-corner-controls [:stove-vent :zip-door :door-frame])
@@ -457,8 +456,7 @@
      (< 2 (count (:zip f))))))
 
 (defn shipping-form [state]
-  (do
-    (sab/html
+  (sab/html
      [:div.yome-widget-shipping-form-container
       (ship-form-input state "Name" :name)
       (ship-form-input state "Email" :email)
@@ -475,7 +473,7 @@
       [:button.yome-shipping-button
        {:onClick (prevent-> (fn [] (send-form-data state)))
         :disabled (not (shipping-form-filled-out? state))}
-       "Get Shipping Estimate"]])))
+       "Get Shipping Estimate"]]))
 
 (defn get-shipping-estimate [state]
   (sab/html
@@ -502,7 +500,7 @@
      [:label "3. Choose the positions of the door and windows:"]]
     [:div.yome-widget-flex 
      [:div.yome-doors-windows-text 
-     [:img.yome-graphic-image {:src "http://rigsomelight.com/yome-widget/frameup.png" }]
+     [:div.yome-graphic-image]
       [:p "The walls of a Yome are made up of a series of upward and downward facing triangles (see illus). The diagram below represents the top plate (the plate between the top of the walls and the bottom of the roof). The diagram's corners represent the tips of the upward facing triangles and the edges represent the downward facing triangles."]
       [:p "The doors and stovepipe vent are placed in upward triangles while the windows and large screen opening are placed in the downward triangles."]]]
     [:div.yome-svg-container 
@@ -529,7 +527,9 @@
 
     [:div.yome-widget-form-control
      [:div.yome-widget-label [:label "4. Review price below:"]]
-     [:h3.yome-widget-center  "Price Before Shipping: " (str "$" (get-price state))]]
+     [:h3.yome-widget-center  "Price Before Shipping: "
+      [:span.yome-widget-price-before-shipping
+       (str "$" (get-price state))]]]
 
     (get-shipping-estimate state)
 
@@ -561,7 +561,7 @@
 
 (defonce initial-hash-check
   (do
-    (js/setTimeout handle-hash-change 600)
+    (js/setTimeout handle-hash-change 1500)
     true))
 
 (defn on-js-reload []
