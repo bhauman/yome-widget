@@ -47,8 +47,8 @@ svg.yome .yome-stove-vent {
     position: relative;
     padding: 10px;
     padding-bottom: 5em;
-    background: rgba(0,0,0,0.41);
-    border-radius: 10px;
+    background: rgba(0,0,0,0.21);
+    border-radius: 4px;
     color: white;
 }
 
@@ -88,14 +88,22 @@ svg.yome .yome-stove-vent {
     font-size: 0.9em;
 }
 
+.yome-widget-form-control {
+    margin-bottom: 1.2em;
+}
+
 .yome-shipping-button {
 
 }
 
-.yome-graphic-image {
+#com-rigsomelight-yome-widget .yome-graphic-image {
     float: right;
     opacity: 0.8;
     padding-left: 10px;
+    border: 0px;
+    width: 275px;
+    position:relative;
+    top: -15px;
 }
 
 .yome-widget-center {
@@ -105,7 +113,6 @@ svg.yome .yome-stove-vent {
 .yome-widget-inline-label {
     display: block;
 }
-
 
 #com-rigsomelight-yome-widget .yome-widget span.yome-widget-checkbox-label {
     color: white;
