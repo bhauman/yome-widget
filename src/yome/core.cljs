@@ -478,7 +478,9 @@
        "Get Shipping Estimate"]])))
 
 (defn get-shipping-estimate [state]
-  [:div [:div.yome-widget-label [:label "5. Get a shipping estimate:"]]
+  (sab/html
+   [:div.yome-widget-form-control
+    [:div.yome-widget-label [:label "5. Get a shipping estimate:"]]
    (condp = (:shipping-form-state state)
      :show (shipping-form state)
      :sending (sab/html [:h2.yome-widget-center "Sending Email ..."])
@@ -491,7 +493,7 @@
         {:href "#"
          :onClick
          (prevent-> (fn [_] (om/update! state :shipping-form-state :show)))}
-        "Get Shipping Estimate"]]))])
+        "Get Shipping Estimate"]]))]))
 
 (defn place-windows-and-doors [state]
   (sab/html
@@ -525,7 +527,8 @@
 
     (options state)
 
-    [:div [:div.yome-widget-label [:label "4. Review price below:"]]
+    [:div.yome-widget-form-control
+     [:div.yome-widget-label [:label "4. Review price below:"]]
      [:h3.yome-widget-center  "Price Before Shipping: " (str "$" (get-price state))]]
 
     (get-shipping-estimate state)

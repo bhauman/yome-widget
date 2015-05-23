@@ -88,16 +88,22 @@ svg.yome .yome-stove-vent {
     font-size: 0.9em;
 }
 
+.yome-widget-form-control {
+    margin-bottom: 1.2em;
+}
+
 .yome-shipping-button {
 
 }
 
-#com-rigsomelight-yome-widge .yome-graphic-image {
+#com-rigsomelight-yome-widget .yome-graphic-image {
     float: right;
     opacity: 0.8;
     padding-left: 10px;
     border: 0px;
     width: 275px;
+    position:relative;
+    top: -15px;
 }
 
 .yome-widget-center {
