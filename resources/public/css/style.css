@@ -202,7 +202,7 @@ svg.yome .yome-stove-vent {
            visibility: hidden; }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 420px) {
     .yome-graphic-image {
         display: none;
     }
