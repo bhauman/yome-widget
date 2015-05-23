@@ -46,14 +46,23 @@ svg.yome .yome-stove-vent {
 .yome-widget {
     position: relative;
     padding: 10px;
+    padding-bottom: 5em;
     background: rgba(0,0,0,0.41);
     border-radius: 10px;
     color: white;
 }
 
+.yome-widget-get-estimate-link {
+    color: white;
+}
+
+.yome-widget-get-estimate-link:visited {
+    color: white;
+}
+
 .yome-widget-options-container {
     text-align: left;
-    width: 280px;
+    width: 310px;
     margin: auto;
 }
 

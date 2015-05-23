@@ -12,6 +12,10 @@
 
 (enable-console-print!)
 
+(defn l [x]
+  (.log js/console x)
+  x)
+
 (defn prevent-> [f]
   (fn [e]
     (.preventDefault e)
@@ -304,9 +308,9 @@
                   :roof-insulation-plus-kit   {7 580 8 670}
                   :hemp-or-sunglow-sidewalls  {6 315 7 315 8 365}
                   :snow-load-kit              {6 180 7 280 8 360}
-                  :insulation-strips          {6 70 7 80 8 90}
-                  :fabric-flashing            {6 45 7 45 8 65}
-                  :stove-vent-hole            {7 50 8 50}})
+                  :insulation-strips          {6 70  7 80  8 90}
+                  :fabric-flashing            {6 45  7 45  8 65}
+                  :stove-vent-hole            {7 50  8 50}})
 
 (def option-names {:wall-insulation           "Wall Insulation"
                    :roof-insulation-kit       "Roof Insulation Kit"
@@ -415,7 +419,6 @@
                 (option-checkbox n t state))
               option-names)]]]])))
 
-
 (defn ship-form-input [state label ky]
   [:div.yome-widget-form-control
    [:label.yome-widget-inline-label label]
@@ -434,72 +437,102 @@
 (defn send-form-data [state]
   (let [data (extract-mail-data state)]
     (prn data)
+    (om/update! state :shipping-form-state :sending)
     (go
       (let [res (<! (http/post
                      "https://yomewidget.herokuapp.com/mail/deets"
                      #_"http://localhost:9292/mail/deets"
                      {:form-params data}))]
+        (om/update! state :shipping-form-state :sent)
         (prn res)))))
 
+(defn shipping-form-filled-out? [state]
+  (let [f (get state :shipping-form)]
+    (and
+     (:email f)
+     (< 2 (count (:email f)))
+     (:zip f)
+     (< 2 (count (:zip f))))))
+
 (defn shipping-form [state]
+  (do
+    (sab/html
+     [:div.yome-widget-shipping-form-container
+      (ship-form-input state "Name" :name)
+      (ship-form-input state "Email" :email)
+      (ship-form-input state "City" :city)
+      (ship-form-input state "ZIP Code" :zip)
+      [:div.yome-widget-form-control
+       [:label.yome-widget-inline-label "Comments"]
+       [:textarea {:type "text" :name (name :comments)
+                   :value (get-in state [:shipping-form :comments])
+                   :onChange
+                   (prevent->value (fn [v]
+                                     (om/transact! state :shipping-form
+                                                   (fn [f] (assoc f :comments v)))))}]]
+      [:button.yome-shipping-button
+       {:onClick (prevent-> (fn [] (send-form-data state)))
+        :disabled (not (shipping-form-filled-out? state))}
+       "Get Shipping Estimate"]])))
+
+(defn get-shipping-estimate [state]
+  [:div [:div.yome-widget-label [:label "5. Get a shipping estimate:"]]
+   (condp = (:shipping-form-state state)
+     :show (shipping-form state)
+     :sending (sab/html [:h2.yome-widget-center "Sending Email ..."])
+     :sent (sab/html [:div.yome-widget-center
+                      [:h2 "Email Sent!"]
+                      [:p "Thank you for your interest. We'll get a quote to you shortly."]])
+     (sab/html
+      [:div.yome-widget-center
+       [:a.yome-widget-get-estimate-link
+        {:href "#"
+         :onClick
+         (prevent-> (fn [_] (om/update! state :shipping-form-state :show)))}
+        "Get Shipping Estimate"]]))])
+
+(defn place-windows-and-doors [state]
   (sab/html
-   [:div.yome-widget-shipping-form-container
-    (ship-form-input state "Name" :name)
-    (ship-form-input state "Email" :email)
-    (ship-form-input state "City" :city)
-    (ship-form-input state "ZIP Code" :zip)
-    [:div.yome-widget-form-control
-     [:label.yome-widget-inline-label "Comments"]
-     [:textarea {:type "text" :name (name :comments)
-                 :value (get-in state [:shipping-form :comments])
-                 :onChange
-                 (prevent->value (fn [v]
-                                   (om/transact! state :shipping-form
-                                                 (fn [f] (assoc f :comments v)))))}]]
-    [:button.yome-shipping-button
-     {:onClick (prevent-> (fn [] (send-form-data state)))}
-     "Get Shipping Estimate"]]))
+   [:div.yome-widget-form-control
+    [:div.yome-widget-label
+     [:label "3. Choose the positions of the door and windows:"]]
+    [:div.yome-widget-flex 
+     [:div.yome-doors-windows-text 
+     [:img.yome-graphic-image {:src "frameup.png" }]
+      [:p "The walls of a Yome are made up of a series of upward and downward facing triangles (see illus). The diagram below represents the top plate (the plate between the top of the walls and the bottom of the roof). The diagram's corners represent the tips of the upward facing triangles and the edges represent the downward facing triangles."]
+      [:p "The doors and stovepipe vent are placed in upward triangles while the windows and large screen opening are placed in the downward triangles."]]]
+    [:div.yome-svg-container 
+    [:svg {:class "yome" :height 500 :width 500
+           :viewBox "-250 -250 500 500"
+           :preserveAspectRatio "xMidYMid meet" }
+     (draw-yome state)]
+     (draw-yome-controls state)]]))
 
 (defn yome [state]
   (sab/html
    [:div.yome-widget
     [:h1.yome-widget-header "BUILD YOUR YOME"]
-    [:div.yome-widget-form-control
+    [:div.yome-widget-form-control {:key "kit-header"}
      [:div.yome-widget-label [:label "1. Would you like a complete Yome or a Yome Kit?"]]
      [:div.yome-widget-center (select-yome-kit (:form state))]]
     [:div.yome-widget-form-control
      [:div.yome-widget-label [:label "2. How big do you want your Yome to be?"]]
      [:div.yome-widget-center (select-yome-size (side-count state))]]
 
-    [:div.yome-widget-form-control
-     [:div.yome-widget-label [:label "3. Choose the positions of the door and windows:"]]
-     [:div.yome-widget-flex 
-      [:div.yome-doors-windows-text 
-       [:img.yome-graphic-image {:src "frameup.png" }]
-       [:p "The walls of a Yome are made up of a series of upward and downward facing triangles (see illus). The diagram below represents the top plate (the plate between the top of the walls and the bottom of the roof). The diagram's corners represent the tips of the upward facing triangles and the edges represent the downward facing triangles."]
-       [:p "The doors and stovepipe vent are placed in upward triangles while the windows and large screen opening are placed in the downward triangles."]]]
-     [:div.yome-svg-container 
-      [:svg {:class "yome" :height 500 :width 500
-             :viewBox "-250 -250 500 500"
-             :preserveAspectRatio "xMidYMid meet" }
-       (draw-yome state)]
-      (draw-yome-controls state)]]
+    (place-windows-and-doors state)
+
     (options state)
+
     [:div [:div.yome-widget-label [:label "4. Review price below:"]]
      [:h4.yome-widget-center  "Price Before Shipping: " (str "$" (get-price state))]]
 
-    [:div [:div.yome-widget-label [:label "5. Get a shipping estimate:"]]
-     (if (:show-shipping-form state)
-       (shipping-form state)
-       [:div.yome-widget-center  [:a {:href "#"
-                                    :onClick
-                                      (prevent-> (fn [_] (om/update! state :show-shipping-form true)))}
-                                  "Get Shipping Estimate"]])]
-    [:div [:input {:type "text"
+    (get-shipping-estimate state)
+
+    #_[:div [:input {:type "text"
                    :value (serialize-yome state)
                    :onChange (prevent->value (fn [v]
                                                (swap! app-state merge (deserialize-yome v))))}]]
-    [:div
+    #_[:div
      {:style {:color "white"}}
      (om/build ankha/inspector @app-state)]]))
 
