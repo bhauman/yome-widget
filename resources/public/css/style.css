@@ -52,6 +52,29 @@ svg.yome .yome-stove-vent {
     color: white;
 }
 
+.yome-price-breakdown {
+    display: table;
+    margin: auto;
+    margin-top: 1em;
+    width: 300px;
+}
+
+.yome-price-row {
+    display: table-row;
+}
+
+.yome-price-name {
+    display: table-cell;
+    color: #ccc;
+}
+
+.yome-price-num {
+    padding-left: 1em;
+    text-align: right;
+    display: table-cell;
+    color: #ccc;    
+}
+
 .yome-widget-get-estimate-link {
     color: white;
 }
@@ -66,13 +89,20 @@ svg.yome .yome-stove-vent {
 }
 
 .yome-widget-shipping-form-container {
-    width: 200px;
+    width: 290px;
     margin: auto;
 }
 
 .yome-widget-shipping-form-container input,
 .yome-widget-shipping-form-container textarea {
-    width: 200px;
+    width: 100%;
+}
+
+.yome-state {
+    margin: 3em;
+    text-align: center;
+    color: #666;
+    font-size: 1.3em;
 }
 
 .yome-svg-container {
@@ -208,12 +238,11 @@ svg.yome .yome-stove-vent {
     }
     div.yome-svg-container {
         margin: 0px;
-        width: 300px;
+        width:  300px;
         height: 400px;
-       /* top: -50px;
-        left: -50px; */
-        -webkit-transform: scale(0.78);
-        transform: scale(0.78);
-    }
+        top:    -50px;
+        left:   -67px;
+        -webkit-transform: scale(0.65);
+        transform: scale(0.78);        
+  }
 }
-
