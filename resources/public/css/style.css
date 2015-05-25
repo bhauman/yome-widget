@@ -98,6 +98,13 @@ svg.yome .yome-stove-vent {
     width: 100%;
 }
 
+.yome-state {
+    margin: 3em;
+    text-align: center;
+    color: #666;
+    font-size: 1.3em;
+}
+
 .yome-svg-container {
     position: relative;
     height: 500px; 

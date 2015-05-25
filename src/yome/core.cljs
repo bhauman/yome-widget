@@ -224,22 +224,22 @@
   (str (if (= op :add) "+" "-") " "
        (name item))) ;; TODO
 
-(defn corner-transition [{:keys [op item type index] :as ctl}]
-  (swap! app-state
-         (fn [state]
-           (let [res (update-in state [:sides index]
-                                (fn [side]
+(defn corner-transition [{:keys [op item type index] :as ctl} yome-state]
+  (om/transact! yome-state
+                (fn [state]
+                  (let [res (update-in state [:sides index]
+                                       (fn [side]
                                   (assoc side type
                                          (when (= op :add) item))))
-                 res (update-in res [:form]
-                                (fn [form]
-                                  (if (= item :stove-vent)
-                                    (condp = op
-                                      :add (assoc form :stove-vent-hole true)
+                        res (update-in res [:form]
+                                       (fn [form]
+                                         (if (= item :stove-vent)
+                                           (condp = op
+                                             :add (assoc form :stove-vent-hole true)
                                       :remove (dissoc form :stove-vent-hole)
                                       form)
-                                    form)))]
-             res))))
+                                           form)))]
+                    res))))
 
 (defn corner-controls [yome side index]
   (let [theta (+ (* (yome-theta yome) index)
@@ -254,7 +254,7 @@
               [:a {:href "#"
                    :key (name (:item corner-control))
                    :className (str "op-" (name (:op corner-control)))
-                   :onClick (prevent-> (fn [] (corner-transition corner-control)))}
+                   :onClick (prevent-> (fn [] (corner-transition corner-control yome)))}
                (control-to-string corner-control)])
             (corner-controls-to-render yome side index))]])))
 
@@ -277,7 +277,7 @@
                       (name (:op ctl))
                       " "
                       (name (:item ctl)))
-              :onClick (prevent-> (fn [] (corner-transition ctl)))}
+              :onClick (prevent-> (fn [] (corner-transition ctl yome)))}
           (control-to-string ctl)])]])))
 
 (defn side-controls [yome index]
@@ -289,13 +289,13 @@
 (defn draw-yome-controls [yome]
     (sab/html [:div.yome-controls (map (partial side-controls yome) (range (side-count yome)))]))
 
-(defn select-yome-size [n]
+(defn select-yome-size [n state]
   (sab/html
    [:select.yome-type-select
     {:value    n
      :onChange (prevent->value
                 (fn [v]
-                  (swap! app-state change-yome-sides v)))}
+                  (om/transact! state (fn [s] (change-yome-sides s v)))))}
     (map-indexed
      (fn [i y]
        [:option {:value (+ 6 i)} y])
@@ -580,7 +580,7 @@
      [:div.yome-widget-center (select-yome-kit (:form state))]]
     [:div.yome-widget-form-control
      [:div.yome-widget-label [:label "2. How big do you want your Yome to be?"]]
-     [:div.yome-widget-center (select-yome-size (side-count state))]]
+     [:div.yome-widget-center (select-yome-size (side-count state) state)]]
 
     (place-windows-and-doors state)
 
@@ -595,13 +595,10 @@
 
     (get-shipping-estimate state)
 
-    #_[:div [:input {:type "text"
-                   :value (serialize-yome state)
-                   :onChange (prevent->value (fn [v]
-                                               (swap! app-state merge (deserialize-yome v))))}]]
+    [:div.yome-state (serialize-yome state)]
     #_[:div
-     {:style {:color "white"}}
-     (om/build ankha/inspector @app-state)]]))
+       {:style {:color "white"}}
+       (om/build ankha/inspector @app-state)]]))
 
 (om/root
   (fn [data owner]
