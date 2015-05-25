@@ -80,6 +80,17 @@
 (defn window-count [yome]
   (count (filter :face (:sides yome))))
 
+(defn door-frame-count [yome]
+  (count (filter #(= % :door-frame) (keep :corner (:sides yome)))))
+
+#_(prn (door-frame-count @app-state))
+
+(defn stove-vent? [yome]
+  (> (count (filter #(= % :stove-vent) (keep :corner (:sides yome))))
+     0))
+
+#_(prn (stove-vent? @app-state))
+
 (defn yome-theta [yome]
   (/ (* 2 js/Math.PI) (side-count yome)))
 
@@ -219,7 +230,15 @@
            (let [res (update-in state [:sides index]
                                 (fn [side]
                                   (assoc side type
-                                         (when (= op :add) item))))]
+                                         (when (= op :add) item))))
+                 res (update-in res [:form]
+                                (fn [form]
+                                  (if (= item :stove-vent)
+                                    (condp = op
+                                      :add (assoc form :stove-vent-hole true)
+                                      :remove (dissoc form :stove-vent-hole)
+                                      form)
+                                    form)))]
              res))))
 
 (defn corner-controls [yome side index]
@@ -302,6 +321,7 @@
                              8 2300}
                   :window {:reg  120
                            :poly 165}
+                  :door-frame                 90
                   :wall-insulation            {6 660 7 760 8 860}
                   :roof-insulation-kit        {7 365 8 440}
                   :roof-insulation-plus-kit   {7 580 8 670}
@@ -309,7 +329,8 @@
                   :snow-load-kit              {6 180 7 280 8 360}
                   :insulation-strips          {6 70  7 80  8 90}
                   :fabric-flashing            {6 45  7 45  8 65}
-                  :stove-vent-hole            {7 50  8 50}})
+                  :stove-vent-hole            {6 50 7 50  8 50}
+                  })
 
 (def option-names {:wall-insulation           "Wall Insulation"
                    :roof-insulation-kit       "Roof Insulation Kit"
@@ -318,7 +339,8 @@
                    :snow-load-kit             "Snow Load Kit"
                    :insulation-strips         "Insulation Strips"
                    :fabric-flashing           "Fabric Flashing"
-                   :stove-vent-hole           "Stove Vent Hole"})
+                   ; :stove-vent-hole           "Stove Vent Hole"
+                   })
 
 (def binary-options [:kit
                      :poly-window
@@ -374,8 +396,43 @@
                          :yome)
                        (side-count state)]))
 
+(defn door-frame-cost [state]
+  (* (door-frame-count state) (:door-frame price-table)))
+
+(defn stove-vent-hole-cost [state]
+  (if (stove-vent? state)
+    (option-cost :stove-vent-hole state)
+    0))
+
 (defn get-price [state]
-  (apply + ((juxt yome-cost window-cost total-option-cost) state)))
+  (apply + ((juxt
+             yome-cost
+             window-cost
+             total-option-cost
+             door-frame-cost) state)))
+
+(def price-break-down-parts
+  (concat
+   [["Base Price"      yome-cost]
+    ["Windows"         window-cost]
+    ["Door Frame"      door-frame-cost]
+    ["Stove Vent Hole" stove-vent-hole-cost]]
+   (mapv (fn [[k v]] [v (fn [state]
+                         (if (get-in state [:form k])
+                           (option-cost k state)
+                           0))] ) option-names)))
+
+(defn price-break-down [state]
+  (sab/html
+   [:div.yome-price-breakdown 
+    (map (fn [[k f]]
+           (let [p (f state)]
+             (if (zero? p)
+               (sab/html [:span])
+               (sab/html
+                [:div.yome-price-row
+                 [:div.yome-price-name k] [:div.yome-price-num p ]]))))
+         price-break-down-parts)]))
 
 (defn event-checked? [e]
   (.-checked (.-target e)))
@@ -394,10 +451,12 @@
                      (let [window-cost (:window price-table)]
                      (- (:poly window-cost)
                         (:reg window-cost))))]
-    (checkbox (str "Polycarbonate Window Covers $" poly-cost)
-              (-> state :form :poly-window)
-              (prevent->checked
-               (fn [c] (om/update! state [:form :poly-window] c))))))
+    (if (zero? poly-cost)
+      (sab/html [:span])
+      (checkbox (str "Polycarbonate Window Covers $" poly-cost)
+                (-> state :form :poly-window)
+                (prevent->checked
+                 (fn [c] (om/update! state [:form :poly-window] c)))))))
 
 (defn option-checkbox [lab type state]
   (if-let [cost (option-cost type state)]
@@ -421,14 +480,15 @@
               option-names)]]]])))
 
 (defn ship-form-input [state label ky]
-  [:div.yome-widget-form-control
-   [:label.yome-widget-inline-label label]
-   [:input {:type "text" :name (name ky)
-            :value (get-in state [:shipping-form ky])
-            :onChange
-            (prevent->value (fn [v]
-                              (om/transact! state :shipping-form
-                                            (fn [f] (assoc f ky v)))))}]])
+  (sab/html
+   [:div.yome-widget-form-control
+    [:label.yome-widget-inline-label label]
+    [:input {:type "text" :name (name ky)
+             :value (get-in state [:shipping-form ky])
+             :onChange
+             (prevent->value (fn [v]
+                               (om/transact! state :shipping-form
+                                            (fn [f] (assoc f ky v)))))}]]))
 
 (defn extract-mail-data [state]
   (assoc
@@ -510,6 +570,7 @@
      (draw-yome state)]
      (draw-yome-controls state)]]))
 
+
 (defn yome [state]
   (sab/html
    [:div.yome-widget
@@ -527,6 +588,7 @@
 
     [:div.yome-widget-form-control
      [:div.yome-widget-label [:label "4. Review price below:"]]
+     (price-break-down state)
      [:h3.yome-widget-center  "Price Before Shipping: "
       [:span.yome-widget-price-before-shipping
        (str "$" (get-price state))]]]
