@@ -323,18 +323,18 @@
                            :poly 165}
                   :door-frame                 90
                   :wall-insulation            {6 660 7 760 8 860}
-                  :roof-insulation-kit        {7 365 8 440}
+                  :roof-insulation-kit        {6 275 7 365 8 440}
                   :roof-insulation-plus-kit   {7 580 8 670}
-                  :hemp-or-sunglow-sidewalls  {6 315 7 315 8 365}
+                  :hemp-or-sunglow-sidewalls  {6 315 7 365 8 420}
                   :snow-load-kit              {6 180 7 280 8 360}
                   :insulation-strips          {6 70  7 80  8 90}
-                  :fabric-flashing            {6 45  7 45  8 65}
-                  :stove-vent-hole            {6 50 7 50  8 50}
+                  :fabric-flashing            {6 45  7 55  8 65}
+                  :stove-vent-hole            {6 50  7 50  8 50}
                   })
 
 (def option-names {:wall-insulation           "Wall Insulation"
                    :roof-insulation-kit       "Roof Insulation Kit"
-                   :roof-insulation-plus-kit  "Roof Insulation Plus Kit"
+                   :roof-insulation-plus-kit  "Roof Insulation Package"
                    :hemp-or-sunglow-sidewalls "Hemp or SunGlow Sidewalls"
                    :snow-load-kit             "Snow Load Kit"
                    :insulation-strips         "Insulation Strips"
@@ -416,7 +416,7 @@
    [["Base Price"      yome-cost]
     ["Windows"         window-cost]
     ["Door Frame"      door-frame-cost]
-    ["Stove Vent Hole" stove-vent-hole-cost]]
+    ["Stove Pipe Vent" stove-vent-hole-cost]]
    (mapv (fn [[k v]] [v (fn [state]
                          (if (get-in state [:form k])
                            (option-cost k state)
@@ -464,7 +464,12 @@
               (-> state :form type)
               (prevent->checked
                (fn [c] (om/update! state [:form type] c))))
-    (sab/html [:span])))
+    (sab/html [:div {:key lab}
+               [:label
+                [:input.yome-widget-checkbox {:type "checkbox"
+                                              :value 1
+                                              :disabled true}]
+                [:span.yome-widget-checkbox-label (str lab " N/A")]]])))
 
 (defn options [state]
   (let [sides (side-count state)]
