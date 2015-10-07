@@ -191,6 +191,7 @@ svg.yome .yome-stove-vent {
     text-decoration: none;
     transition: color 0.5s;
     line-height: 1.2em;
+    white-space: nowrap;
 }
 
 .yome-widget .yome-controls a.op-remove {

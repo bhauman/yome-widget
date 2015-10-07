@@ -4,11 +4,9 @@
    [clojure.string :as string]
    [clojure.set :refer [map-invert]]
    [sablono.core :as sab]
-   [cljs.core.async :as async
-    :refer [<! >! chan close! sliding-buffer put! take! alts! timeout onto-chan map< to-chan filter<]]   
-   [cljs-http.client :as http]
-   [ankha.core :as ankha])
-  (:require-macros [cljs.core.async.macros :as m :refer [go alt! go-loop]]))
+   [cljs.core.async :as async :refer [<!]]   
+   [cljs-http.client :as http])
+  (:require-macros [cljs.core.async.macros :as m :refer [go]]))
 
 (enable-console-print!)
 
@@ -375,8 +373,13 @@
        a))
    '() (range (count binary-options))))
 
+
+(defn chargable-windows [state]
+  (let [wc (window-count state)]
+    (if (pos? wc) (dec wc) wc)))
+
 (defn window-cost [state]
-  (* (window-count state)
+  (* (chargable-windows state)
      (get-in price-table
              [:window
               (if (get-in state [:form :poly-window])
@@ -600,10 +603,7 @@
 
     (get-shipping-estimate state)
 
-    [:div.yome-state (serialize-yome state)]
-    #_[:div
-       {:style {:color "white"}}
-       (om/build ankha/inspector @app-state)]]))
+    [:div.yome-state (serialize-yome state)]]))
 
 (om/root
   (fn [data owner]
