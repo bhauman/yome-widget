@@ -340,7 +340,6 @@
                    :snow-load-kit             "Snow Load Kit"
                    :insulation-strips         "Insulation Strips"
                    :fabric-flashing           "Fabric Flashing"
-                   ; :stove-vent-hole           "Stove Vent Hole"
                    })
 
 (def binary-options [:kit
@@ -351,8 +350,7 @@
                      :hemp-or-sunglow-sidewalls 
                      :snow-load-kit             
                      :insulation-strips         
-                     :fabric-flashing           
-                     :stove-vent-hole])
+                     :fabric-flashing])
 
 (defn int->mask [i]
   (if (zero? i) 1 (bit-shift-left 1 i)))
