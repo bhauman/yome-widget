@@ -467,12 +467,7 @@
               (-> state :form type)
               (prevent->checked
                (fn [c] (om/update! state [:form type] c))))
-    (sab/html [:div {:key lab}
-               [:label
-                [:input.yome-widget-checkbox {:type "checkbox"
-                                              :value 1
-                                              :disabled true}]
-                [:span.yome-widget-checkbox-label (str lab " N/A")]]])))
+    (sab/html [:span])))
 
 (defn options [state]
   (let [sides (side-count state)]
