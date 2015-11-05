@@ -1,8 +1,9 @@
 (ns yome.core
   (:require
+   #_[cljs.pprint :as p]
    [om.core :as om :include-macros true]
    [clojure.string :as string]
-   [clojure.set :refer [map-invert]]
+   [clojure.set :refer [map-invert intersection]]
    [sablono.core :as sab]
    [cljs.core.async :as async :refer [<!]]   
    [cljs-http.client :as http])
@@ -81,7 +82,8 @@
 (defn door-frame-count [yome]
   (count (filter #(= % :door-frame) (keep :corner (:sides yome)))))
 
-#_(prn (door-frame-count @app-state))
+(defn zip-door-count [yome]
+  (count (filter #(= % :zip-door) (keep :corner (:sides yome)))))
 
 (defn stove-vent? [yome]
   (> (count (filter #(= % :stove-vent) (keep :corner (:sides yome))))
@@ -320,6 +322,7 @@
                   :window {:reg  120
                            :poly 165}
                   :door-frame                 90
+                  :zip-door                   50
                   :wall-insulation            {6 660 7 760 8 860}
                   :roof-insulation-kit        {6 275 7 365 8 440}
                   :roof-insulation-plus-kit   {7 580 8 670}
@@ -402,6 +405,14 @@
 (defn door-frame-cost [state]
   (* (door-frame-count state) (:door-frame price-table)))
 
+(defn zip-door-cost [state]
+  (let [door-number (zip-door-count state)]
+    (*
+     (if (zero? door-number)
+      door-number
+      (dec door-number))
+     (:zip-door price-table))))
+
 (defn stove-vent-hole-cost [state]
   (if (stove-vent? state)
     (option-cost :stove-vent-hole state)
@@ -412,13 +423,15 @@
              yome-cost
              window-cost
              total-option-cost
-             door-frame-cost) state)))
+             door-frame-cost
+             zip-door-cost) state)))
 
 (def price-break-down-parts
   (concat
    [["Base Price"      yome-cost]
     ["Windows"         window-cost]
     ["Door Frame"      door-frame-cost]
+    ["Zip Doors"       zip-door-cost]    
     ["Stove Pipe Vent" stove-vent-hole-cost]]
    (mapv (fn [[k v]] [v (fn [state]
                          (if (get-in state [:form k])
@@ -462,15 +475,28 @@
                  (fn [c] (om/update! state [:form :poly-window] c)))))))
 
 (defn option-checkbox [lab type state]
-  (if-let [cost (option-cost type state)]
+  (when-let [cost (option-cost type state)]
     (checkbox (str lab " $" cost)
               (-> state :form type)
               (prevent->checked
-               (fn [c] (om/update! state [:form type] c))))
-    (sab/html [:span])))
+               (fn [c] (om/update! state [:form type] c))))))
+
+(let [roof-options #{:roof-insulation-kit :roof-insulation-plus-kit}]
+  (defn insulation-options-filter [state]
+    (if-let [res (not-empty
+                    (set (take 1
+                               (intersection (->> state
+                                                  :form
+                                                  (filter second)
+                                                  keys
+                                                  set) 
+                                             roof-options))))]
+      (clojure.set/difference roof-options res)
+      #{})))
 
 (defn options [state]
-  (let [sides (side-count state)]
+  (let [sides (side-count state)
+        filt  (comp not (insulation-options-filter state) first)]
     (sab/html
      [:div.yome-widget-form-control
       [:div.yome-widget-label [:label "4. Choose any of these available options:"]]
@@ -480,7 +506,8 @@
         [:div
          (map (fn [[t n]]
                 (option-checkbox n t state))
-              option-names)]]]])))
+              (filter filt option-names) 
+)]]]])))
 
 (defn ship-form-input [state label ky]
   (sab/html
@@ -598,7 +625,11 @@
 
     (get-shipping-estimate state)
 
-    [:div.yome-state (serialize-yome state)]]))
+    [:div.yome-state (serialize-yome state)]
+    #_[:div [:pre [:code
+                 (with-out-str (p/pprint @state))
+
+                 ]]]]))
 
 (om/root
   (fn [data owner]
