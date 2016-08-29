@@ -242,8 +242,8 @@
                                          (if (= item :stove-vent)
                                            (condp = op
                                              :add (assoc form :stove-vent-hole true)
-                                      :remove (dissoc form :stove-vent-hole)
-                                      form)
+                                             :remove (dissoc form :stove-vent-hole)
+                                             form)
                                            form)))]
                     res))))
 
@@ -428,7 +428,11 @@
              window-cost
              total-option-cost
              door-frame-cost
-             zip-door-cost) state)))
+             zip-door-cost
+             #_stove-vent-hole-cost
+             ) state)))
+
+
 
 (def price-break-down-parts
   (concat
@@ -594,7 +598,7 @@
      [:label "3. Choose the positions of the door and windows:"]]
     [:div.yome-widget-flex 
      [:div.yome-doors-windows-text 
-     [:div.yome-graphic-image]
+      [:div.yome-graphic-image]
       [:p "The walls of a Yome are made up of a series of upward and downward facing triangles (see side-bar illustration). The diagram below represents the top plate (the plate between the top of the walls and the bottom of the roof). The diagram's corners represent the tips of the upward facing triangles and the edges represent the downward facing triangles."]
       [:p "The doors and stovepipe vent are placed in upward triangles while the windows and large screen opening are placed in the downward triangles."]
       [:h2 {:style {:textAlign "center"}} "Click on the diagram below to add windows and doors to your Yome:"]]]
@@ -604,7 +608,6 @@
            :preserveAspectRatio "xMidYMid meet" }
      (draw-yome state)]
      (draw-yome-controls state)]]))
-
 
 (defn yome [state]
   (sab/html
