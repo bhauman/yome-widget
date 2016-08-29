@@ -1,0 +1,15 @@
+var YOMES_WIDGET_PRICES =
+    {yome:                       {6: 2460, 7: 3100, 8: 3680},
+     yome_kit:                   {6: 1425, 7: 2000, 8: 2300},
+     window_reg:                 {6:  120, 7:  120, 8:  120},
+     window_poly:                {6:  165, 7:  165, 8:  165},
+     door_frame:                 {6:   90, 7:   90, 8:   90},
+     zip_door:                   {6:   50, 7:   50, 8:   50},
+     wall_insulation:            {6:  660, 7:  760, 8:  860},
+     roof_insulation_kit:        {6:  275, 7:  365, 8:  440},
+     roof_insulation_plus_kit:   {7:  580, 8:  670},
+     hemp_or_sunglow_sidewalls:  {6:  315, 7:  365, 8:  420},
+     snow_load_kit:              {6:  180, 7:  280, 8:  360},
+     insulation_strips:          {6:   70, 7:   80, 8:   90},
+     fabric_flashing:            {6:   45, 7:   55, 8:   65},
+     stove_vent_hole:            {6:   50, 7:   50, 8:   50}};

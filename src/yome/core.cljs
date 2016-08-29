@@ -545,6 +545,8 @@
         (om/update! state :shipping-form-state :sent)
         (prn res)))))
 
+
+
 (defn shipping-form-filled-out? [state]
   (let [f (get state :shipping-form)]
     (and
@@ -638,6 +640,30 @@
                  (with-out-str (p/pprint @state))
 
                  ]]]]))
+
+(defn convert-js-price-data [js-prices]
+  (when js-prices
+    (->> (js->clj js-prices)
+         (map (fn [[k v]]
+                [(keyword (string/replace k "_" "-"))
+                 (->> v
+                      (map (fn [[k v]] [(js/parseInt k) v]))
+                      (into {}))]))
+         (into {}))))
+
+(defn import-prices! []
+  (when-not (undefined? js/window.YOME_WIDGET_PRICES)
+    (when-let [imported (try (convert-js-price-data
+                              js/window.YOME_WIDGET_PRICES)
+                             (catch js/Error e nil))]
+      (when (and (map? imported)
+                 (= (set (keys imported))
+                    (set (keys price-table))))
+        (js/console.log "importing prices")
+        (set! price-table imported)))))
+
+;; import prices as a top level side effect before rendering
+(import-prices!)
 
 (om/root
   (fn [data owner]
