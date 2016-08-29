@@ -203,10 +203,13 @@
 (defn addable-door? [yome]
   (> 3 (+ (count-item yome :zip-door) (count-item yome :door-frame))))
 
+(defn addable-door-frame? [yome]
+  (and (addable-door? yome) (> (side-count yome) 6)))
+
 (defn control-visible? [yome type]
   (condp = type
     :zip-door   (addable-door? yome)
-    :door-frame (addable-door? yome)
+    :door-frame (addable-door-frame? yome)
     :stove-vent (addable-stove-vent? yome)
     false))
 
