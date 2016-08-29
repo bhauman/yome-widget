@@ -6,7 +6,8 @@
    [clojure.set :refer [map-invert intersection]]
    [sablono.core :as sab]
    [cljs.core.async :as async :refer [<!]]   
-   [cljs-http.client :as http])
+   [cljs-http.client :as http]
+   [goog.object :as gobj])
   (:require-macros [cljs.core.async.macros :as m :refer [go]]))
 
 (enable-console-print!)
@@ -652,9 +653,8 @@
          (into {}))))
 
 (defn import-prices! []
-  (when-not (undefined? js/window.YOME_WIDGET_PRICES)
-    (when-let [imported (try (convert-js-price-data
-                              js/window.YOME_WIDGET_PRICES)
+  (when-let [js-prices (gobj/get js/window "YOME_WIDGET_PRICES")]
+    (when-let [imported (try (convert-js-price-data js-prices)
                              (catch js/Error e nil))]
       (when (and (map? imported)
                  (= (set (keys imported))

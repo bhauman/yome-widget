@@ -1,4 +1,4 @@
-var YOMES_WIDGET_PRICES =
+var YOME_WIDGET_PRICES =
     {yome:                       {6: 2460, 7: 3100, 8: 3680},
      yome_kit:                   {6: 1425, 7: 2000, 8: 2300},
      window_reg:                 {6:  120, 7:  120, 8:  120},
