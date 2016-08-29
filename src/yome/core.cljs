@@ -319,16 +319,12 @@
        [:option {:value v} t])
      [["Yome" false] ["Yome Kit" true]])]))
 
-(def price-table {:yome {6 2460
-                         7 3100
-                         8 3680}
-                  :yome-kit {6 1425
-                             7 2000
-                             8 2300}
-                  :window {:reg  120
-                           :poly 165}
-                  :door-frame                 90
-                  :zip-door                   50
+(def price-table {:yome                       {6 2460 7 3100 8 3680}
+                  :yome-kit                   {6 1425 7 2000 8 2300}
+                  :window-reg                 {6 120 7 120 8 120}
+                  :window-poly                {6 165 7 165 8 165}
+                  :door-frame                 {6 90 7 90 8 90}
+                  :zip-door                   {6 50 7 50 8 50}
                   :wall-insulation            {6 660 7 760 8 860}
                   :roof-insulation-kit        {6 275 7 365 8 440}
                   :roof-insulation-plus-kit   {7 580 8 670}
@@ -382,19 +378,24 @@
 
 
 (defn chargable-windows [state]
-  (let [wc (window-count state)]
+  (let [wc (window-count state)
+        poly? (get-in state [:form :poly-window])]
     (if (pos? wc) (dec wc) wc)))
-
-(defn window-cost [state]
-  (* (chargable-windows state)
-     (get-in price-table
-             [:window
-              (if (get-in state [:form :poly-window])
-                :poly
-                :reg)])))
 
 (defn option-cost [type state]
   (get-in price-table [type (side-count state)]))
+
+(defn poly-window-cost-difference [state]
+  (if (get-in state [:form :poly-window])
+    (* (window-count state)
+       (- (option-cost :window-poly state)
+          (option-cost :window-reg  state)))
+    0))
+
+(defn window-cost [state]
+  (+ (* (chargable-windows state)
+        (option-cost :window-reg state))
+     (poly-window-cost-difference state)))
 
 (defn total-option-cost [state]
   (let [opts (keep (fn [[k v]] (when v k)) (:form state))]
@@ -407,7 +408,7 @@
                        (side-count state)]))
 
 (defn door-frame-cost [state]
-  (* (door-frame-count state) (:door-frame price-table)))
+  (* (door-frame-count state) (option-cost :door-frame state)))
 
 (defn zip-door-cost [state]
   (let [door-number (zip-door-count state)]
@@ -415,7 +416,7 @@
      (if (zero? door-number)
       door-number
       (dec door-number))
-     (:zip-door price-table))))
+     (option-cost :zip-door state))))
 
 (defn stove-vent-hole-cost [state]
   (if (stove-vent? state)
@@ -472,9 +473,8 @@
 
 (defn polycarbonate-window-choice [state]
   (let [poly-cost (* (window-count state)
-                     (let [window-cost (:window price-table)]
-                     (- (:poly window-cost)
-                        (:reg window-cost))))]
+                     (- (option-cost :window-poly state)
+                        (option-cost :window-reg  state)))]
     (if (zero? poly-cost)
       (sab/html [:span])
       (checkbox (str "Polycarbonate Window Covers $" poly-cost)
