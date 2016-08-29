@@ -67,7 +67,10 @@
         sides (mapv (fn [s c]
                      (assoc s :corner (decode-map c)))
                     sides corners)
-        selected-options (unconvert-options (js/parseInt binary-code))]
+        selected-options (unconvert-options (js/parseInt binary-code))
+        selected-options (if (some #(= (:corner %) :stove-vent) sides)
+                           (conj selected-options :stove-vent-hole)
+                           selected-options)]
     (reduce (fn [a o] (assoc-in a [:form o] true))
             {:sides sides} selected-options)))
 
