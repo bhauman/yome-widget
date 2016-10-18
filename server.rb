@@ -37,7 +37,7 @@ Comments:
 #{ data[:comments] }
 
 You can view the yome here:
-http://rigsomelight.com/yome-widget/#!/yome/#{ data[:code] } 
+http://redskyshelters.com/calculator/#!/yome/#{ data[:code] } 
 
 Enjoy!!!"
     end    
