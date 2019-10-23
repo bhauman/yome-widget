@@ -43,6 +43,8 @@
 
 (defonce app-state (atom (change-yome-sides {:form {}} 8)))
 
+;;**************** Begin Yome Code Maker Functions *********************
+
 (def code-map {nil "r"
               :door-frame "d"
               :stove-vent "p"
@@ -75,6 +77,10 @@
     (reduce (fn [a o] (assoc-in a [:form o] true))
             {:sides sides} selected-options)))
 
+;;****************** End Yome Code Maker Functions *********************
+
+;;********************* Begin Feature Count Functions ******************
+
 (def round js/Math.round)
 
 (defn side-count [yome]
@@ -95,6 +101,9 @@
 
 #_(prn (stove-vent? @app-state))
 
+;;********************* End Feature Count Functions ********************
+
+;;**********************Begin Drawing Functions ************************
 (defn yome-theta [yome]
   (/ (* 2 js/Math.PI) (side-count yome)))
 
@@ -195,6 +204,8 @@
   (sab/html
    [:g {:transform (str "rotate(" (/ (yome-deg yome) 2) ", 0, 0)")}
     (map (partial yome-side yome) (range (side-count yome)))]))
+
+;;******************** End Drawing Functions **************************
 
 (def base-corner-controls [:stove-vent :zip-door :door-frame])
 
@@ -302,7 +313,8 @@
     {:value    n
      :onChange (prevent->value
                 (fn [v]
-                  (om/transact! state (fn [s] (change-yome-sides s v)))))}
+                  (om/transact! state (fn [s] (change-yome-sides s v)))))
+                  }
     (map-indexed
      (fn [i y]
        [:option {:value (+ 6 i)} y])
@@ -329,17 +341,18 @@
                   :wall-insulation            {6 660 7 760 8 860}
                   :roof-insulation-kit        {6 275 7 365 8 440}
                   :roof-insulation-plus-kit   {7 580 8 670}
-                  :hemp-or-sunglow-sidewalls  {6 315 7 365 8 420}
+                  :sunglow-sidewalls          {6 315 7 365 8 420}
                   :snow-load-kit              {6 180 7 280 8 360}
                   :insulation-strips          {6 70  7 80  8 90}
                   :fabric-flashing            {6 45  7 55  8 65}
                   :stove-vent-hole            {6 50  7 50  8 50}
+                  :ultra-yome                 {6 0   7 0   8 2280}
                   })
 
 (def option-names {:wall-insulation           "Wall Insulation"
                    :roof-insulation-kit       "Roof Insulation Kit"
                    :roof-insulation-plus-kit  "Roof Insulation Package"
-                   :hemp-or-sunglow-sidewalls "Hemp or SunGlow Sidewalls"
+                   :sunglow-sidewalls         "SunGlow Sidewalls"
                    :snow-load-kit             "Snow Load Kit"
                    :insulation-strips         "Insulation Strips"
                    :fabric-flashing           "Fabric Flashing"
@@ -350,10 +363,11 @@
                      :wall-insulation
                      :roof-insulation-kit       
                      :roof-insulation-plus-kit  
-                     :hemp-or-sunglow-sidewalls 
+                     :sunglow-sidewalls 
                      :snow-load-kit             
                      :insulation-strips         
-                     :fabric-flashing])
+                     :fabric-flashing
+                     :ultra-yome])
 
 (defn int->mask [i]
   (if (zero? i) 1 (bit-shift-left 1 i)))
@@ -424,6 +438,12 @@
     (option-cost :stove-vent-hole state)
     0))
 
+(defn ultra-yome-cost [state]
+  (if (-> state :form :ultra-yome) 
+    (option-cost :ultra-yome state)
+    0
+    ))
+
 (defn get-price [state]
   (apply + ((juxt
              yome-cost
@@ -439,6 +459,7 @@
 (def price-break-down-parts
   (concat
    [["Base Price"      yome-cost]
+    ["UltraYome Upgrade"  ultra-yome-cost]
     ["Windows"         window-cost]
     ["Door Frame"      door-frame-cost]
     ["Zip Doors"       zip-door-cost]    
@@ -472,6 +493,35 @@
                        :onChange onchange}]
               [:span.yome-widget-checkbox-label label]]]))
 
+;(defn hidden-ultrayome-checkbox [state]
+;  (fn [state] (om/update! state [:form :ultra-yome] false)))
+
+   ;(let [ultra-yome-cost (option-cost :ultra-yome  state)
+        ;label (str "Test Label")
+        ;value (= true false)
+        ;onchange (fn [c] (om/update! state [:form :ultra-yome] false))]
+    ;(if (or ;(zero? ultra-yome-cost)
+            ;;(< (side-count state) 8)
+            ;(-> state :form :kit)
+            ;(-> state :form :snow-load-kit)
+            ;(-> state :form :roof-insulation-kit) 
+            ;(-> state :form :roof-insulation-plus-kit))
+              ;(sab/html [:span]) 
+              ;(sab/html [:div {:key label}
+                          ;[:label
+                            ;[:input.yome-widget-checkbox {:type "checkbox"
+                                                          ;:value 1
+                                                          ;:checked value
+                                                          ;:on-change onchange}]
+                            ;[:span.yome-widget-checkbox-label label]]])
+              ;)))
+                            
+              
+              ;;(checkbox (str "UltraYome Upgrade (includes Roof Insulation/Ceiling Cover) $" ultra-yome-cost)
+                ;;(= true false)
+                ;;(fn [c] (om/update! state [:form :ultra-yome] false))))))
+
+
 (defn polycarbonate-window-choice [state]
   (let [poly-cost (* (window-count state)
                      (- (option-cost :window-poly state)
@@ -483,6 +533,20 @@
                 (prevent->checked
                  (fn [c] (om/update! state [:form :poly-window] c)))))))
 
+(defn ultra-yome-choice [state]
+  (let [ultra-yome-cost (option-cost :ultra-yome  state)]
+    (if (or ;(zero? ultra-yome-cost)
+            (< (side-count state) 8)
+            (-> state :form :kit)
+            (-> state :form :snow-load-kit)
+            (-> state :form :roof-insulation-kit) 
+            (-> state :form :roof-insulation-plus-kit))
+              (sab/html [:span]) 
+              (checkbox (str "UltraYome Upgrade (includes Roof Insulation/Ceiling Cover) $" ultra-yome-cost)
+                (-> state :form :ultra-yome)
+                (prevent->checked
+                  (fn [c] (om/update! state [:form :ultra-yome] c)))))))
+
 (defn option-checkbox [lab type state]
   (when-let [cost (option-cost type state)]
     (checkbox (str lab " $" cost)
@@ -490,7 +554,7 @@
               (prevent->checked
                (fn [c] (om/update! state [:form type] c))))))
 
-(let [roof-options #{:roof-insulation-kit :roof-insulation-plus-kit}]
+(let [roof-options #{:roof-insulation-kit :roof-insulation-plus-kit :ultra-yome}]
   (defn insulation-options-filter [state]
     (if-let [res (not-empty
                     (set (take 1
@@ -500,22 +564,42 @@
                                                   keys
                                                   set) 
                                              roof-options))))]
-      (clojure.set/difference roof-options res)
+      
+        (clojure.set/difference roof-options res)
+        #{})))
+
+(let [snow-load-options #{:snow-load-kit :ultra-yome}]
+  (defn snow-load-options-filter [state]
+    (if-let [res (not-empty
+                    (set (take 1
+                               (intersection (->> state
+                                                  :form
+                                                  (filter second)
+                                                  keys
+                                                  set) 
+                                             snow-load-options))))]
+      (clojure.set/difference snow-load-options res)
       #{})))
 
 (defn options [state]
   (let [sides (side-count state)
-        filt  (comp not (insulation-options-filter state) first)]
+        insulationFilt  (comp not (insulation-options-filter state) first) ;Make UltraYome and Roof Insulations Mutually Exclusive
+        snowLoadFilt  (comp not (snow-load-options-filter state) first)] ;Snow-Load and UltraYome Mutually Exclusive
     (sab/html
      [:div.yome-widget-form-control
-      [:div.yome-widget-label [:label "4. Choose any of these available options:"]]
+      [:div.yome-widget-label [:label "4. Choose any of these options:"]]
       [:div.yome-widget-center
        [:div.yome-widget-options-container 
+        ;(if (< sides 8)
+        ;(hidden-ultrayome-checkbox state)
+        (ultra-yome-choice state);)
+       ;(-> state [:form :ultra-yome] false)
+        
         (polycarbonate-window-choice state)      
         [:div
          (map (fn [[t n]]
                 (option-checkbox n t state))
-              (filter filt option-names) 
+              (filter snowLoadFilt (filter insulationFilt option-names))
 )]]]])))
 
 (defn ship-form-input [state label ky]
@@ -579,7 +663,7 @@
 (defn get-shipping-estimate [state]
   (sab/html
    [:div.yome-widget-form-control
-    [:div.yome-widget-label [:label "5. Get a shipping estimate:"]]
+    [:div.yome-widget-label [:label "6. Get a shipping estimate:"]]
    (condp = (:shipping-form-state state)
      :show (shipping-form state)
      :sending (sab/html [:h2.yome-widget-center "Sending Email ..."])
@@ -628,7 +712,7 @@
     (options state)
 
     [:div.yome-widget-form-control
-     [:div.yome-widget-label [:label "4. Review price below:"]]
+     [:div.yome-widget-label [:label "5. Review price below:"]]
      (price-break-down state)
      [:h3.yome-widget-center  "Price Before Shipping: "
       [:span.yome-widget-price-before-shipping
