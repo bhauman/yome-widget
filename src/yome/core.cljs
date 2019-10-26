@@ -332,19 +332,19 @@
        [:option {:value v} t])
      [["Yome" false] ["Yome Kit" true]])]))
 
-(def price-table {:yome                       {6 2460 7 3100 8 3680}
-                  :yome-kit                   {6 1425 7 2000 8 2300}
+(def price-table {:yome                       {6 2550 7 3475 8 3995}
+                  :yome-kit                   {6 2290 7 3090 8 3440}
                   :window-reg                 {6 120 7 120 8 120}
                   :window-poly                {6 165 7 165 8 165}
-                  :door-frame                 {6 90 7 90 8 90}
+                  :door-frame                 {6 150 7 150 8 150}
                   :zip-door                   {6 50 7 50 8 50}
-                  :wall-insulation            {6 660 7 760 8 860}
-                  :roof-insulation-kit        {6 275 7 365 8 440}
-                  :roof-insulation-plus-kit   {7 580 8 670}
-                  :sunglow-sidewalls          {6 315 7 365 8 420}
-                  :snow-load-kit              {6 180 7 280 8 360}
-                  :insulation-strips          {6 70  7 80  8 90}
-                  :fabric-flashing            {6 45  7 55  8 65}
+                  :wall-insulation            {6 845 7 995 8 1155}
+                  :roof-insulation-kit        {6 335 7 410 8 525}
+                  :roof-insulation-plus-kit   {7 770 8 865}
+                  :sunglow-sidewalls          {6 325 7 375 8 430}
+                  :snow-load-kit              {6 235 7 275 8 315}
+                  :insulation-strips          {6 70  7 85  8 95}
+                  :fabric-flashing            {6 95  7 110  8 125}
                   :stove-vent-hole            {6 50  7 50  8 50}
                   :ultra-yome                 {6 0   7 0   8 2280}
                   })

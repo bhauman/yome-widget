@@ -55,6 +55,9 @@ To Deploy:
 
     exit REPL (^C)
     
+    An alternative to the previous sequence is to use the command-line:
+      lein cljsbuild once min
+    
   Merge Git Repositories:
     copy /yome-widget/resources/public/js/compiled/yome.js to github fork
       This should be placed under the gh-pages branch in the javascripts folder.
