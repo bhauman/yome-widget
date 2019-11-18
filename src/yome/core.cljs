@@ -627,6 +627,7 @@
                      "https://yomewidget.herokuapp.com/mail/deets"
                      #_"http://localhost:9292/mail/deets"
                      {:form-params data}))]
+                     
         (om/update! state :shipping-form-state :sent)
         (prn res)))))
 
@@ -667,12 +668,11 @@
    (condp = (:shipping-form-state state)
      :show (shipping-form state)
      :sending (sab/html [:h2.yome-widget-center "Sending Email ..."])
-     :sent (sab/html [:div.yome-widget-center
-                      [:h2 "Email Sent!"]
-                      [:p "Thank you for your interest. We'll get a quote to you shortly."]])
+     :sent (set! js/window.location.href (str "https://redskyshelters.com/calculator-submitted/#!/yome/" (serialize-yome state)))
+     
      (sab/html
       [:div.yome-widget-center
-       [:a.yome-widget-get-estimate-link
+       [:a.yome-widget-get-estimate-link     
         {:href "#"
          :onClick
          (prevent-> (fn [_] (om/update! state :shipping-form-state :show)))}
