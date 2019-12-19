@@ -8,7 +8,7 @@ GEM
       treetop (~> 1.4.8)
     mime-types (1.25.1)
     polyglot (0.3.5)
-    rack (1.6.1)
+    rack (1.6.12)
     rack-cors (0.2.8)
       rack
     rack-protection (1.5.3)
